@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 from .gate import evaluate_gate, should_stop
+from .lifecycle import check_reopen, score_outcomes
 from .providers import LiteLLMProvider
 from .runner import run_review
 from .validate import validate_ledger
@@ -20,6 +21,7 @@ def main() -> None:
     v = s.add_parser("validate"); v.add_argument("ledger")
     g = s.add_parser("gate"); g.add_argument("ledger")
     st = s.add_parser("stop"); st.add_argument("ledger"); st.add_argument("--max-rounds", type=int, default=3)
+
     r = s.add_parser("review")
     r.add_argument("decision")
     r.add_argument("--context", default="")
@@ -27,6 +29,16 @@ def main() -> None:
     r.add_argument("--adversary-model", required=True)
     r.add_argument("--max-rounds", type=int, default=3)
     r.add_argument("--out")
+
+    ro = s.add_parser("reopen")
+    ro.add_argument("ledger")
+    ro.add_argument("--trigger", required=True, choices=["NEW_EVIDENCE", "DEPENDENCY_CHANGED", "OUTCOME_CONTRADICTION", "USER_EXPLICIT"])
+    ro.add_argument("--challenge")
+
+    sc = s.add_parser("score")
+    sc.add_argument("ledger")
+    sc.add_argument("outcomes")
+
     args = p.parse_args()
 
     if args.cmd == "review":
@@ -43,6 +55,16 @@ def main() -> None:
             print(args.out)
         else:
             print(text)
+        return
+
+    if args.cmd == "reopen":
+        ok, reason = check_reopen(load(args.ledger), trigger=args.trigger, challenge_id=args.challenge)
+        print("REOPEN" if ok else "KEEP_CLOSED")
+        print(reason)
+        return
+
+    if args.cmd == "score":
+        print(json.dumps(score_outcomes(load(args.ledger), load(args.outcomes)), indent=2))
         return
 
     ledger = load(args.ledger)
