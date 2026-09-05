@@ -1,0 +1,26 @@
+{
+  "id": "DEC-001",
+  "decision": "Build an open-source adversarial decision ledger MVP",
+  "created_at": "2026-09-05T12:43:00-04:00",
+  "claims": [
+    {"id":"CL-1","text":"Generic adversarial multi-agent debate is differentiated enough.","status":"REFUTED","depends_on":[]},
+    {"id":"CL-2","text":"A claim/evidence/provenance specification is differentiated enough.","status":"REFUTED","depends_on":["CL-1"]},
+    {"id":"CL-3","text":"A bounded adversarial decision lifecycle with termination and prospective outcome scoring remains meaningfully open.","status":"SUPPORTED","depends_on":[]}
+  ],
+  "challenges": [
+    {"id":"CH-1","target_claim":"CL-1","title":"Direct prior art exists for multi-agent debate","materiality":"FATAL","status":"RESOLVED","resolves_if":"Pivot away from generic debate as the differentiator."},
+    {"id":"CH-2","target_claim":"CL-2","title":"AIF, PROV, OTel and argumentation prior art overlap the proposed spec","materiality":"FATAL","status":"RESOLVED","resolves_if":"Do not position the project as a new provenance/argumentation standard."},
+    {"id":"CH-3","target_claim":"CL-3","title":"Prospective outcome evaluation requires enough real decisions to resolve","materiality":"MATERIAL","status":"UNRESOLVED","resolves_if":"Accumulate and resolve at least 10 real decisions."}
+  ],
+  "review_rounds": [
+    {"round":1,"new_material_or_blocking":3,"result":"Original debate framework rejected."},
+    {"round":2,"new_material_or_blocking":2,"result":"Spec/conformance framing rejected."},
+    {"round":3,"new_material_or_blocking":0,"result":"Integrated bounded decision lifecycle found no direct clone; GO issued."}
+  ],
+  "commitment": {
+    "action":"ACT",
+    "termination_reason":"No new material challenge in final bounded review; marginal value of more design review negligible.",
+    "accepted_risks":["Prospective scoring requires disciplined use over time."],
+    "committed_at":"2026-09-05T12:43:00-04:00"
+  }
+}
