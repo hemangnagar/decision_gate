@@ -14,6 +14,10 @@ The key question is not "have we eliminated every objection?" It is "do we know 
 
 *A live run, unedited: Claude Opus 5 as Builder and Adversary on "should a 300-bed hospital replace pagers with a messaging app within 12 months?" One FATAL challenge fires the rule. The ledger says what would change the answer, and that even then the answer is WAIT. [Four such runs are annotated here.](data/decisions/README.md)*
 
+![The challenge list from the same run: the FATAL challenge expanded to show its argument and resolves_if, followed by the BLOCKING and MATERIAL challenges](docs/screenshots/003-hospital-challenges.png)
+
+*The Adversary's reasoning is in the ledger, not just its ratings: every challenge carries the argument and the evidence that would retire it.*
+
 ## How it works
 
 ```mermaid
