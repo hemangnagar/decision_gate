@@ -191,6 +191,33 @@ Matched rule: NO_UNRESOLVED_FATAL_OR_BLOCKING
 
 This distinction matters: changing the proposal creates a new ledger. A fatal challenge to Decision A cannot be “resolved” merely by turning Decision A into Decision B.
 
+## Live runs
+
+`data/decisions/003` through `006` are unedited live runs against real
+decisions (a hospital replacing pagers, a Spark-to-DuckDB migration, a
+congestion-pricing pilot, a bakery's third location), Claude Opus 5 in both
+roles. [`data/decisions/README.md`](data/decisions/README.md) annotates each
+one and records what the four runs show about the system, including the
+uncomfortable parts: the stop rule never fired before the round limit, and
+the Adversary never once rated a challenge NON_BLOCKING.
+
+The hospital run is the one ABANDON:
+
+```bash
+decision-gate gate data/decisions/003-hospital-messaging.json
+```
+
+```text
+ABANDON
+Matched rule: UNRESOLVED_FATAL
+Triggering challenges: CH-001
+- Fatal unresolved challenge: Pagers are the out-of-band channel; the app cannot be its own fallback
+If triggering challenges were resolved: WAIT
+```
+
+The last line is the counterfactual: answer the fatal argument and the
+decision is still not ready, because ten BLOCKING challenges remain.
+
 ## Reopen and outcome scoring
 
 Check whether new evidence is allowed to reopen a closed review:
