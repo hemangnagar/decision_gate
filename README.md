@@ -10,6 +10,10 @@ An open-source adversarial decision system. Two models argue about a decision. A
 
 The key question is not "have we eliminated every objection?" It is "do we know enough to take the next action responsibly?"
 
+![The gate on a live run: ABANDON, triggered by CH-001, with the resolves_if that would move it to WAIT](docs/screenshots/003-hospital-gate.png)
+
+*A live run, unedited: Claude Opus 5 as Builder and Adversary on "should a 300-bed hospital replace pagers with a messaging app within 12 months?" One FATAL challenge fires the rule. The ledger says what would change the answer, and that even then the answer is WAIT. [Four such runs are annotated here.](data/decisions/README.md)*
+
 ## How it works
 
 ```mermaid
