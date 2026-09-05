@@ -65,9 +65,29 @@ window" and "I/O fits in the window" cannot both be comfortably true.
 
 No FATAL, nine BLOCKING, so the gate says WAIT, and the counterfactual says
 ACT once those nine are resolved. That is the shape you want from a decision
-that is plausible but under-evidenced. Every BLOCKING challenge carries a
-concrete `resolves_if`, and most of them are the same instruction: replay
-the heaviest jobs on the candidate instance and measure.
+that is plausible but under-evidenced: WAIT is a work plan, not a refusal.
+Read together, the nine `resolves_if` conditions are the migration's
+due-diligence checklist, and every item is a measurement rather than an
+opinion:
+
+| Challenge | What retires it |
+| --- | --- |
+| CH-001 concurrency and spill cliffs | Replay the five heaviest jobs at real nightly concurrency with the true `memory_limit`; no OOM, under 2x slowdown from spill |
+| CH-002 bytes moved, not logical volume | Total bytes read from the source store during one full night (from S3/GCS request metrics), cold-cache throughput, wall clock vs SLA, with one induced retry |
+| CH-003 UDFs and ML steps | Inventory every non-SQL construct, classify each, prototype the single hardest end to end |
+| CH-006 wrong baseline | Cost status quo, tuned Spark, and DuckDB over three years; proceed only if DuckDB beats tuned Spark with a 50% overrun margin |
+| CH-011 moving target | Measure pipeline change velocity, price the dual-maintenance overhead, negotiate a freeze or set a kill date |
+| CH-016 NVMe budget may not exist | Name the in-region SKU with quota; measure NVMe throughput; confirm spill is not the dominant term |
+| CH-017 non-linear core scaling | Benchmark the heaviest jobs at 8, 32, 64 and full threads; confirm the speedup the SLA math assumes |
+| CH-019 single-writer topology | Map concurrent writers and shared intermediates in the DAG; prototype the most interconnected sub-DAG |
+| CH-021 other tenants | Attribute Spark spend into what disappears, what must be re-homed, and what persists; recompute the saving on the first bucket only |
+
+Do those and the gate returns ACT, carrying the thirteen MATERIAL challenges
+(among them: the rewrite is one-way, the parity oracle disappears at cutover,
+savings may be contractually locked for one to three years) as named
+accepted risks. That list is what outcome scoring grades later. The
+congestion-pricing and bakery runs have the same shape with thirteen and
+twelve items respectively.
 
 ### 005 — congestion pricing: the most challenges, the widest domain span
 

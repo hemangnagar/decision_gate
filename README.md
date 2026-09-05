@@ -226,6 +226,38 @@ If triggering challenges were resolved: WAIT
 The last line is the counterfactual: answer the fatal argument and the
 decision is still not ready, because ten BLOCKING challenges remain.
 
+The Spark-to-DuckDB run is the other shape, and the more common one: WAIT
+with a computed path to ACT.
+
+```bash
+decision-gate gate data/decisions/004-spark-to-duckdb.json
+```
+
+```text
+WAIT
+Matched rule: UNRESOLVED_BLOCKING
+Triggering challenges: CH-001, CH-002, CH-003, CH-006, CH-011, CH-016, CH-017, CH-019, CH-021
+...
+If triggering challenges were resolved: ACT
+```
+
+WAIT is not "no". The nine triggering challenges each carry a `resolves_if`,
+and together they are the due-diligence plan for the migration: replay the
+five heaviest jobs at real nightly concurrency, measure bytes actually read
+rather than logical volume, inventory every UDF and prototype the hardest,
+cost three options over three years including a tuned-Spark baseline, name
+the instance SKU and measure its NVMe, plot the thread-scaling curve, map the
+DAG against DuckDB's single-writer model, attribute Spark spend by tenant.
+Do those and the gate returns ACT, carrying the thirteen MATERIAL challenges
+as named accepted risks that outcome scoring later grades.
+
+![The gate on the Spark-to-DuckDB run: WAIT, nine triggering challenges, the first two resolves_if shown, then "the gate returns ACT, carrying ... as accepted risks"](docs/screenshots/004-duckdb-gate.png)
+
+None of the four live runs reached ACT unedited. With this Adversary, that
+is what the numbers in the annotations predict, and it is the honest state
+of the tool: it is better at telling you what you still owe a decision than
+at blessing one.
+
 ## Reopen and outcome scoring
 
 Check whether new evidence is allowed to reopen a closed review:
