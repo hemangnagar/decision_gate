@@ -23,33 +23,89 @@ PROPOSAL
   -> CLAIMS / ASSUMPTIONS / DEPENDENCIES
   -> ADVERSARIAL REVIEW
   -> MATERIAL CHALLENGES
-  -> EVIDENCE / RESOLUTION
   -> DECISION-SUFFICIENCY GATE
   -> ACT / WAIT / ABANDON
   -> COMMIT
+  -> REOPEN ONLY ON DECLARED TRIGGERS
   -> REAL-WORLD OUTCOME
   -> EVALUATE
 ```
 
-## MVP
+## Current MVP
 
-The first vertical slice includes:
+The end-to-end vertical slice now includes:
 
-1. Decision ledger schema represented as JSON.
-2. Deterministic sufficiency gate.
-3. Bounded-review termination rules.
-4. Validation for unresolved items and resolution recipes.
-5. A simple decision-map web UI.
+1. **Builder** decomposes a user decision into load-bearing claims.
+2. **Adversary** generates only new challenges and classifies them FATAL / BLOCKING / MATERIAL / NON_BLOCKING.
+3. **Bounded review** stops after a configured round limit or after a round produces no new consequential challenge.
+4. **Deterministic gate** converts ledger state into ACT / WAIT / ABANDON. Models do not choose the final action.
+5. **Resolution recipes** are mandatory for unresolved challenges.
+6. **Controlled reopen** permits reopening only for declared triggers such as new evidence targeting an unresolved challenge.
+7. **Outcome scorer** compares later human-recorded outcomes with original claims and accepted risks.
+8. **Web decision map** explains the whole flow in a few seconds and lets the user download the resulting ledger.
 
-The model orchestration layer is intentionally not implemented yet. The gate remains deterministic even when model-generated analysis is added later.
+## Run the UI
 
-## Decision semantics
+```bash
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+pip install -e .
+decision-gate-web
+```
 
-- **FATAL** unresolved challenge -> `ABANDON`
-- **BLOCKING** unresolved challenge -> `WAIT`
-- Otherwise -> `ACT`, with remaining material/non-blocking issues recorded as accepted risk where appropriate.
+Open `http://127.0.0.1:8000`.
 
-A review stops when a configured termination condition fires, such as maximum rounds or no new material challenges.
+The default **Demo** mode requires no API key and exists only to demonstrate the UX.
+
+## Run with real models
+
+Decision Gate uses [LiteLLM](https://docs.litellm.ai/) as a provider-neutral adapter.
+
+```bash
+pip install -e '.[llm]'
+```
+
+Set the provider API keys required by the two model strings you choose, then select **Live models via LiteLLM** in the UI or run:
+
+```bash
+decision-gate review \
+  "Should we build this product?" \
+  --builder-model 'openai/<model>' \
+  --adversary-model 'anthropic/<model>' \
+  --out decision.json
+```
+
+Model names are intentionally user-supplied rather than pinned in the project.
+
+## Inspect the deterministic controls
+
+```bash
+decision-gate validate data/decisions/001-build-this-project.json
+decision-gate gate data/decisions/001-build-this-project.json
+decision-gate stop data/decisions/001-build-this-project.json
+```
+
+Check whether new evidence is allowed to reopen a closed review:
+
+```bash
+decision-gate reopen decision.json --trigger NEW_EVIDENCE --challenge CH-001
+```
+
+Score later outcomes:
+
+```bash
+decision-gate score decision.json outcomes.json
+```
+
+`outcomes.json` uses claim outcomes `HELD | FAILED | UNKNOWN` and risk outcomes `REALIZED | NOT_REALIZED | UNKNOWN` keyed by IDs from the ledger.
+
+## Gate semantics
+
+- unresolved **FATAL** -> `ABANDON`
+- unresolved **BLOCKING** -> `WAIT`
+- otherwise -> `ACT`, with unresolved MATERIAL / NON_BLOCKING items recorded as accepted risks
+
+A review closes when a stopping condition fires. The existence of another possible objection is not itself a reopen trigger.
 
 ## Seed decision
 
@@ -57,24 +113,17 @@ A review stops when a configured termination condition fires, such as maximum ro
 
 - V1: generic adversarial-agent framework
 - V2: adversarial validation spec/conformance suite
-- V3: prospective adversarial decision ledger with explicit stopping and action
+- V3: prospective adversarial decision system with explicit stopping and action
 
 The final design-validation gate produced: **ACT — BUILD MVP**.
 
-## Run locally
-
-```bash
-python -m decision_gate.cli validate data/decisions/001-build-this-project.json
-python -m decision_gate.cli gate data/decisions/001-build-this-project.json
-```
-
-Run tests:
+## Tests
 
 ```bash
 python -m unittest discover -s tests -v
 ```
 
-Open `web/index.html` directly in a browser for the static MVP decision-map UI.
+CI runs the same suite on every pull request.
 
 ## Product principle
 

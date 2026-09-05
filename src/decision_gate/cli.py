@@ -1,7 +1,13 @@
 from __future__ import annotations
-import argparse, json
+
+import argparse
+import json
 from pathlib import Path
+
 from .gate import evaluate_gate, should_stop
+from .lifecycle import check_reopen, score_outcomes
+from .providers import LiteLLMProvider
+from .runner import run_review
 from .validate import validate_ledger
 
 
@@ -15,22 +21,72 @@ def main() -> None:
     v = s.add_parser("validate"); v.add_argument("ledger")
     g = s.add_parser("gate"); g.add_argument("ledger")
     st = s.add_parser("stop"); st.add_argument("ledger"); st.add_argument("--max-rounds", type=int, default=3)
+
+    r = s.add_parser("review")
+    r.add_argument("decision")
+    r.add_argument("--context", default="")
+    r.add_argument("--builder-model", required=True)
+    r.add_argument("--adversary-model", required=True)
+    r.add_argument("--max-rounds", type=int, default=3)
+    r.add_argument("--out")
+
+    ro = s.add_parser("reopen")
+    ro.add_argument("ledger")
+    ro.add_argument("--trigger", required=True, choices=["NEW_EVIDENCE", "DEPENDENCY_CHANGED", "OUTCOME_CONTRADICTION", "USER_EXPLICIT"])
+    ro.add_argument("--challenge")
+
+    sc = s.add_parser("score")
+    sc.add_argument("ledger")
+    sc.add_argument("outcomes")
+
     args = p.parse_args()
+
+    if args.cmd == "review":
+        ledger = run_review(
+            decision=args.decision,
+            context=args.context,
+            builder=LiteLLMProvider(args.builder_model),
+            adversary=LiteLLMProvider(args.adversary_model),
+            max_rounds=args.max_rounds,
+        )
+        text = json.dumps(ledger, indent=2)
+        if args.out:
+            Path(args.out).write_text(text)
+            print(args.out)
+        else:
+            print(text)
+        return
+
+    if args.cmd == "reopen":
+        ok, reason = check_reopen(load(args.ledger), trigger=args.trigger, challenge_id=args.challenge)
+        print("REOPEN" if ok else "KEEP_CLOSED")
+        print(reason)
+        return
+
+    if args.cmd == "score":
+        print(json.dumps(score_outcomes(load(args.ledger), load(args.outcomes)), indent=2))
+        return
+
     ledger = load(args.ledger)
     if args.cmd == "validate":
         errors = validate_ledger(ledger)
         print("VALID" if not errors else "INVALID")
-        for e in errors: print(f"- {e}")
+        for e in errors:
+            print(f"- {e}")
     elif args.cmd == "gate":
-        r = evaluate_gate(ledger)
-        print(r.action)
-        for reason in r.reasons: print(f"- {reason}")
-        if r.accepted_risks:
+        result = evaluate_gate(ledger)
+        print(result.action)
+        for reason in result.reasons:
+            print(f"- {reason}")
+        if result.accepted_risks:
             print("Accepted risks:")
-            for risk in r.accepted_risks: print(f"- {risk}")
+            for risk in result.accepted_risks:
+                print(f"- {risk}")
     elif args.cmd == "stop":
         stop, reason = should_stop(ledger.get("review_rounds", []), args.max_rounds)
         print("STOP" if stop else "CONTINUE")
         print(reason)
 
-if __name__ == "__main__": main()
+
+if __name__ == "__main__":
+    main()
