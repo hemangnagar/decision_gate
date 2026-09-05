@@ -10,21 +10,34 @@ An open-source adversarial decision system. Two models argue about a decision. A
 
 The key question is not "have we eliminated every objection?" It is "do we know enough to take the next action responsibly?"
 
-## Core lifecycle
+## How it works
 
-```text
-PROPOSAL
-  -> CLAIMS / ASSUMPTIONS / DEPENDENCIES
-  -> ADVERSARIAL REVIEW
-  -> MATERIAL CHALLENGES
-  -> BOUNDED STOP
-  -> DETERMINISTIC SUFFICIENCY GATE
-  -> ACT / WAIT / ABANDON
-  -> COMMIT
-  -> REOPEN ONLY ON DECLARED TRIGGERS
-  -> REAL-WORLD OUTCOME
-  -> EVALUATE
+```mermaid
+flowchart TD
+    D(["Decision"]) --> B["Builder<br/>states the claims the decision rests on"]
+    B --> A["Adversary<br/>raises only new challenges, each rated<br/>FATAL / BLOCKING / MATERIAL / NON_BLOCKING"]
+    A --> S{{"Stop rule<br/>new consequential challenge this round?"}}
+    S -- "yes, and rounds remain" --> A
+    S -- "no, or round limit reached" --> G{{"Gate<br/>unresolved FATAL? else unresolved BLOCKING?"}}
+    G -- "FATAL" --> ABANDON(["ABANDON"])
+    G -- "BLOCKING" --> WAIT(["WAIT"])
+    G -- "neither" --> ACT(["ACT<br/>MATERIAL and NON_BLOCKING<br/>carried as accepted risks"])
+    WAIT -. "reopen only on a declared trigger<br/>such as the evidence named in resolves_if" .-> G
+    ABANDON --> O
+    WAIT --> O
+    ACT --> O["Outcome scoring<br/>reality later grades the claims and accepted risks"]
+
+    classDef model fill:#fff7ed,stroke:#9a3412,color:#111827
+    classDef rule fill:#111827,stroke:#111827,color:#ffffff
+    classDef result fill:#f9fafb,stroke:#6b7280,color:#111827
+    class B,A model
+    class S,G rule
+    class D,ABANDON,WAIT,ACT,O result
 ```
+
+Light boxes are model output. Dark boxes are rules. The models never touch the dark boxes: they cannot end the review early, keep it going, or choose the action.
+
+Every run produces a ledger: the decision, the claims, every challenge with its rating and its `resolves_if`, the round at which the review stopped and why, the rule that fired, and the committed action. The ledger is what gets scored later.
 
 ## The deterministic control boundary
 
