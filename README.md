@@ -65,6 +65,25 @@ Every gate result records:
 
 That makes the result mechanically traceable instead of another model recommendation. Because the gate is a rule, the ledger can state what would change the answer, not just what the answer is.
 
+## What the rule guarantees — and what it doesn't
+
+Being precise about this matters more than the diagram.
+
+**Guaranteed by construction**
+
+- **Termination.** A review ends when a round adds no FATAL, BLOCKING, or MATERIAL challenge, or when the round limit is reached. No model can keep it open.
+- **No model chooses the action.** ACT / WAIT / ABANDON is computed from ledger state by three lines of code. Change the code and the ledger says so (`gate: deterministic-v1`).
+- **Traceability.** Every result names the rule that fired, the challenge IDs that fired it, and the counterfactual — what the gate would return if those challenges were resolved.
+- **Stable reopening.** A closed review reopens only on a declared trigger aimed at a named unresolved challenge. "Someone thought of another objection" is not a trigger.
+
+**Not guaranteed — and where the judgment still lives**
+
+- **The materiality ratings are model output.** The Adversary decides whether a challenge is FATAL, BLOCKING, MATERIAL, or NON_BLOCKING, and those ratings are the gate's only input. The rule guarantees that the action follows from the ratings; it does not guarantee the ratings are right. That is the honest boundary of this design: the model is moved one step back from the decision, not removed from it.
+- **A weak Adversary can starve the stop rule.** If it raises nothing consequential, the review closes early and the gate returns ACT on thin evidence. The round limit bounds cost, not quality.
+- **Outcome scoring has no data yet.** The scorer exists; calibration needs resolved decisions with observed outcomes, which take time to accumulate.
+
+What makes those limits tolerable is that the ledger is a document, not a verdict. Ratings are visible and editable before gating — a human can re-rate a challenge and re-run the gate, and the ledger records that they did. And the outcome scorer later grades exactly the thing the model got to decide: whether the risks it rated as acceptable were in fact realized.
+
 ## Current MVP
 
 The end-to-end vertical slice includes:
@@ -92,7 +111,7 @@ Open `http://127.0.0.1:8000`.
 
 ### Demo mode
 
-Demo mode needs no API key. It replays **one fixed worked example** through the real ledger, stop rule, and gate. The Builder and Adversary output is canned, so the decision field is locked to the example and the result is labeled as demo.
+Demo mode needs no API key and never calls a model. It replays **one fixed worked example** through the real ledger, stop rule, and gate. The Builder and Adversary output is canned, so the decision field is locked to the example and the result is labeled as demo.
 
 The example:
 
@@ -135,6 +154,9 @@ decision-gate review \
 ```
 
 Model names are intentionally user-supplied rather than pinned in the project.
+
+Live mode calls the providers with the API keys present on the machine running it. Nothing in this repository, and nothing in Demo mode, uses anyone else's account. If you host the UI for other people, host Demo mode only — Live mode on a public host means visitors spend your credits.
+
 
 ## Inspect the deterministic controls
 
