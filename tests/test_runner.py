@@ -39,16 +39,22 @@ class RunnerTests(unittest.TestCase):
     def test_material_challenge_can_act_with_accepted_risk(self):
         ledger = run_review(decision="Build it", context="", builder=StubBuilder(), adversary=StubAdversary("MATERIAL"))
         self.assertEqual(ledger["commitment"]["action"], "ACT")
+        self.assertEqual(ledger["commitment"]["matched_rule"], "NO_UNRESOLVED_FATAL_OR_BLOCKING")
         self.assertEqual(len(ledger["review_rounds"]), 2)
         self.assertIn("Feasibility unproven", ledger["commitment"]["accepted_risks"])
+        self.assertIn("no new MATERIAL", ledger["termination"]["reason"])
 
     def test_blocking_challenge_waits(self):
         ledger = run_review(decision="Build it", context="", builder=StubBuilder(), adversary=StubAdversary("BLOCKING"))
         self.assertEqual(ledger["commitment"]["action"], "WAIT")
+        self.assertEqual(ledger["commitment"]["matched_rule"], "UNRESOLVED_BLOCKING")
+        self.assertEqual(ledger["commitment"]["triggering_challenges"], ["CH-001"])
 
     def test_fatal_challenge_abandons(self):
         ledger = run_review(decision="Build it", context="", builder=StubBuilder(), adversary=StubAdversary("FATAL"))
         self.assertEqual(ledger["commitment"]["action"], "ABANDON")
+        self.assertEqual(ledger["commitment"]["matched_rule"], "UNRESOLVED_FATAL")
+        self.assertEqual(ledger["commitment"]["triggering_challenges"], ["CH-001"])
 
 
 if __name__ == "__main__":

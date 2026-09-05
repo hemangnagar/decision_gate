@@ -28,11 +28,16 @@ function render(ledger) {
   $('termination').textContent = ledger.termination?.reason || 'Review policy closed the loop.';
   $('action').textContent = ledger.commitment.action;
   $('action').className = ledger.commitment.action.toLowerCase();
+
+  const matchedRule = ledger.commitment.matched_rule || 'legacy ledger — rule trace unavailable';
+  const triggers = ledger.commitment.triggering_challenges || [];
+  $('gateTrace').innerHTML = `<b>Matched rule:</b> ${esc(matchedRule)}${triggers.length ? `<br><b>Triggered by:</b> ${triggers.map(esc).join(', ')}` : ''}`;
   $('actionReason').textContent = (ledger.commitment.reasons || []).join(' ');
+
   const unresolved = ledger.challenges.filter(c => c.status === 'UNRESOLVED' && ['FATAL','BLOCKING'].includes(c.materiality));
   $('nextAction').innerHTML = unresolved.length
-    ? `<b>What to do next</b>${unresolved.map(c => `<div>${esc(c.resolves_if)}</div>`).join('')}`
-    : '<b>Review closed.</b> Proceed with the accepted risks recorded above.';
+    ? `<b>What changes this decision</b>${unresolved.map(c => `<div><b>${esc(c.id)}:</b> ${esc(c.resolves_if)}</div>`).join('')}`
+    : '<b>Review closed.</b> Proceed with the accepted risks recorded in the ledger.';
   $('download').classList.remove('hidden');
   $('map').classList.remove('hidden');
   $('map').scrollIntoView({behavior:'smooth'});

@@ -26,7 +26,6 @@ def _normalize_claims(raw: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "depends_on": list(claim.get("depends_on") or []),
             }
         )
-    # Models sometimes emit provisional IDs. Only retain dependencies that match final IDs.
     ids = {c["id"] for c in claims}
     for claim in claims:
         claim["depends_on"] = [d for d in claim["depends_on"] if d in ids]
@@ -121,6 +120,8 @@ def run_review(
     gate = evaluate_gate(ledger)
     ledger["commitment"] = {
         "action": gate.action,
+        "matched_rule": gate.matched_rule,
+        "triggering_challenges": gate.triggering_challenges,
         "reasons": gate.reasons,
         "accepted_risks": gate.accepted_risks,
         "committed_at": _now(),

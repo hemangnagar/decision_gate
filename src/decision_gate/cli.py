@@ -76,6 +76,9 @@ def main() -> None:
     elif args.cmd == "gate":
         result = evaluate_gate(ledger)
         print(result.action)
+        print(f"Matched rule: {result.matched_rule}")
+        if result.triggering_challenges:
+            print("Triggering challenges: " + ", ".join(result.triggering_challenges))
         for reason in result.reasons:
             print(f"- {reason}")
         if result.accepted_risks:

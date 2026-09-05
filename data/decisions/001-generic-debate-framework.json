@@ -1,0 +1,48 @@
+{
+  "id": "DEC-001",
+  "decision": "Build a generic multi-agent adversarial debate framework",
+  "created_at": "2026-09-05T12:20:00-04:00",
+  "claims": [
+    {
+      "id": "CL-001",
+      "title": "Generic adversarial debate is differentiated",
+      "statement": "A generic builder-versus-adversary multi-agent framework is sufficiently differentiated from existing orchestration and debate systems to justify a new project.",
+      "kind": "ASSUMPTION",
+      "depends_on": []
+    }
+  ],
+  "challenges": [
+    {
+      "id": "CH-001",
+      "target_claim": "CL-001",
+      "title": "Direct prior art covers the core thesis",
+      "argument": "Existing systems already provide multi-agent debate, critic/reflection loops, and adversarial orchestration. The proposed generic framework does not establish a differentiated control lifecycle.",
+      "materiality": "FATAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "Demonstrate a materially different decision lifecycle or control mechanism that is not simply another debate/orchestration framework.",
+      "raised_in_round": 1
+    }
+  ],
+  "review_rounds": [
+    {
+      "round": 1,
+      "new_challenges": 1,
+      "new_material_or_blocking": 1,
+      "result": "A fatal direct-prior-art challenge invalidated the generic framework thesis."
+    }
+  ],
+  "termination": {
+    "reason": "The decision already has an unresolved FATAL challenge; additional argument cannot make this proposal actionable without changing the proposal itself.",
+    "round": 1,
+    "closed_at": "2026-09-05T12:25:00-04:00"
+  },
+  "commitment": {
+    "action": "ABANDON",
+    "matched_rule": "UNRESOLVED_FATAL",
+    "triggering_challenges": ["CH-001"],
+    "reasons": ["Fatal unresolved challenge: Direct prior art covers the core thesis"],
+    "accepted_risks": [],
+    "gate": "deterministic-v1",
+    "committed_at": "2026-09-05T12:25:00-04:00"
+  }
+}
