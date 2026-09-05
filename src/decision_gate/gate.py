@@ -61,3 +61,18 @@ def should_stop(review_rounds: list[dict[str, Any]], max_rounds: int = 3) -> tup
     if len(review_rounds) >= max_rounds:
         return True, f"Maximum review rounds reached ({max_rounds})."
     return False, "More adversarial review is permitted by policy."
+
+
+def evaluate_if_resolved(ledger: dict[str, Any], challenge_ids: list[str]) -> GateResult:
+    """Re-run the gate as if the given challenges were resolved.
+
+    Because the gate is a rule rather than a model, the ledger can state exactly
+    what would change the action. This is the counterfactual behind that statement.
+    """
+    ids = set(challenge_ids)
+    hypothetical = dict(ledger)
+    hypothetical["challenges"] = [
+        {**c, "status": "RESOLVED"} if c.get("id") in ids else c
+        for c in ledger.get("challenges", [])
+    ]
+    return evaluate_gate(hypothetical)

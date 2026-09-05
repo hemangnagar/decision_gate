@@ -1,36 +1,43 @@
 # Decision Gate
 
-An open-source adversarial decision system that challenges a decision, stops when further analysis has low value, forces an **ACT / WAIT / ABANDON** call, and later lets real outcomes score the reasoning.
+An open-source adversarial decision system. Two models argue about a decision. A fixed rule, not a model, decides **ACT / WAIT / ABANDON**. Real outcomes later score the reasoning.
 
-## Why this exists
+## The idea in three lines
 
-AI can always generate another objection. Decision Gate treats **stopping** and **commitment** as part of the reasoning protocol.
+1. **Models argue, a rule decides.** The Builder states what the decision rests on. The Adversary attacks it and rates each objection by what it does to the decision if it stays unresolved. Neither model picks the action.
+2. **The review stops when arguing stops changing the answer.** A round that adds no FATAL, BLOCKING, or MATERIAL challenge closes the review. AI can always produce another objection, so the stop is a rule, not a judgment call.
+3. **The gate is three lines long**, so every result says which rule fired, which challenges fired it, and exactly what would flip it.
 
-The key question is not:
+The key question is not "have we eliminated every objection?" It is "do we know enough to take the next action responsibly?"
 
-> Have we eliminated every objection?
+## How it works
 
-It is:
+```mermaid
+flowchart TD
+    D(["Decision"]) --> B["Builder<br/>states the claims the decision rests on"]
+    B --> A["Adversary<br/>raises only new challenges, each rated<br/>FATAL / BLOCKING / MATERIAL / NON_BLOCKING"]
+    A --> S{{"Stop rule<br/>new consequential challenge this round?"}}
+    S -- "yes, and rounds remain" --> A
+    S -- "no, or round limit reached" --> G{{"Gate<br/>unresolved FATAL? else unresolved BLOCKING?"}}
+    G -- "FATAL" --> ABANDON(["ABANDON"])
+    G -- "BLOCKING" --> WAIT(["WAIT"])
+    G -- "neither" --> ACT(["ACT<br/>MATERIAL and NON_BLOCKING<br/>carried as accepted risks"])
+    WAIT -. "reopen only on a declared trigger<br/>such as the evidence named in resolves_if" .-> G
+    ABANDON --> O
+    WAIT --> O
+    ACT --> O["Outcome scoring<br/>reality later grades the claims and accepted risks"]
 
-> Do we know enough to take the next action responsibly?
-
-The models generate claims and challenges. They do **not** choose the final action.
-
-## Core lifecycle
-
-```text
-PROPOSAL
-  -> CLAIMS / ASSUMPTIONS / DEPENDENCIES
-  -> ADVERSARIAL REVIEW
-  -> MATERIAL CHALLENGES
-  -> BOUNDED STOP
-  -> DETERMINISTIC SUFFICIENCY GATE
-  -> ACT / WAIT / ABANDON
-  -> COMMIT
-  -> REOPEN ONLY ON DECLARED TRIGGERS
-  -> REAL-WORLD OUTCOME
-  -> EVALUATE
+    classDef model fill:#fff7ed,stroke:#9a3412,color:#111827
+    classDef rule fill:#111827,stroke:#111827,color:#ffffff
+    classDef result fill:#f9fafb,stroke:#6b7280,color:#111827
+    class B,A model
+    class S,G rule
+    class D,ABANDON,WAIT,ACT,O result
 ```
+
+Light boxes are model output. Dark boxes are rules. The models never touch the dark boxes: they cannot end the review early, keep it going, or choose the action.
+
+Every run produces a ledger: the decision, the claims, every challenge with its rating and its `resolves_if`, the round at which the review stopped and why, the rule that fired, and the committed action. The ledger is what gets scored later.
 
 ## The deterministic control boundary
 
@@ -54,8 +61,9 @@ Every gate result records:
 - `triggering_challenges`
 - human-readable `reasons`
 - `accepted_risks`
+- `if_triggers_resolved`: the action the gate would return if the triggering challenges were resolved
 
-That makes the result mechanically traceable instead of another model recommendation.
+That makes the result mechanically traceable instead of another model recommendation. Because the gate is a rule, the ledger can state what would change the answer, not just what the answer is.
 
 ## Current MVP
 
@@ -82,7 +90,31 @@ decision-gate-web
 
 Open `http://127.0.0.1:8000`.
 
-The local **Demo** mode requires no API key and exercises the same ledger and deterministic gate path with fixed providers.
+### Demo mode
+
+Demo mode needs no API key. It replays **one fixed worked example** through the real ledger, stop rule, and gate. The Builder and Adversary output is canned, so the decision field is locked to the example and the result is labeled as demo.
+
+The example:
+
+```text
+Decision   Should we build a cardiology-focused procedure operations agent?
+
+Builder    5 claims, e.g. "We can get the data" (DEPENDENCY) and
+           "Coordination work is a real bottleneck" (ASSUMPTION)
+
+Adversary  Round 1: 3 challenges
+             CH-001 BLOCKING      Integration access is not confirmed
+             CH-002 MATERIAL      The bottleneck is asserted, not measured
+             CH-003 NON_BLOCKING  EHR vendor roadmaps are unknown
+           Round 2: nothing new  -> review stops
+
+Gate       WAIT   (rule: UNRESOLVED_BLOCKING, triggered by CH-001)
+           If CH-001 is resolved -> ACT, carrying CH-002 and CH-003 as accepted risks
+```
+
+Stopping the review and returning WAIT is not a contradiction. The review stops because more argument cannot resolve CH-001. Only the evidence named in its `resolves_if` can, and the ledger says what the gate returns once it does.
+
+Switch to **Live** to review your own decision with real models.
 
 ## Run with real models
 

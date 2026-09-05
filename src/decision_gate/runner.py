@@ -4,7 +4,7 @@ import json
 from datetime import datetime, timezone
 from typing import Any
 
-from .gate import evaluate_gate, should_stop
+from .gate import evaluate_gate, evaluate_if_resolved, should_stop
 from .prompts import ADVERSARY_PROMPT, ADVERSARY_SYSTEM, BUILDER_PROMPT, BUILDER_SYSTEM
 from .providers import Provider
 from .validate import VALID_MATERIALITY
@@ -127,4 +127,12 @@ def run_review(
         "committed_at": _now(),
         "gate": "deterministic-v1",
     }
+    if gate.triggering_challenges:
+        after = evaluate_if_resolved(ledger, gate.triggering_challenges)
+        ledger["commitment"]["if_triggers_resolved"] = {
+            "action": after.action,
+            "matched_rule": after.matched_rule,
+            "triggering_challenges": after.triggering_challenges,
+            "accepted_risks": after.accepted_risks,
+        }
     return ledger

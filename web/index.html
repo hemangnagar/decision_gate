@@ -2,27 +2,47 @@
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Decision Gate</title><link rel="stylesheet" href="styles.css"></head>
 <body><main>
 <section class="hero">
-  <div class="eyebrow">ADVERSARIAL DECISION REVIEW</div>
+  <div class="eyebrow">DECISION GATE</div>
   <h1>Challenge the decision.<br>Then make one.</h1>
-  <p>Identify what must be true, attack the load-bearing assumptions, stop when more analysis stops helping, and commit to ACT, WAIT, or ABANDON.</p>
+  <p>One model states what the decision rests on. Another attacks it. The review stops when a round adds nothing that would change the outcome. Then a fixed rule, not a model, returns <b>ACT</b>, <b>WAIT</b>, or <b>ABANDON</b>.</p>
   <div class="input-card">
-    <textarea id="decision" placeholder="What decision are you trying to make?">Should we build a cardiology-focused procedure operations agent?</textarea>
+    <textarea id="decision" placeholder="What decision are you trying to make?"></textarea>
     <textarea id="context" class="context" placeholder="Optional context, constraints, or evidence"></textarea>
     <div class="controls">
-      <select id="mode"><option value="demo">Demo — no API key</option><option value="live">Live models via LiteLLM</option></select>
+      <select id="mode"><option value="demo">Demo — fixed example, no API key</option><option value="live">Live — your decision, via LiteLLM</option></select>
       <input id="builderModel" placeholder="Builder model, e.g. openai/..." class="model hidden">
       <input id="adversaryModel" placeholder="Adversary model, e.g. anthropic/..." class="model hidden">
-      <button id="review">Challenge My Decision</button>
+      <button id="review">Run the review</button>
     </div>
+    <div id="modeNote" class="hint">Demo replays one worked example with canned Builder and Adversary output. No model is called. Switch to Live to review your own decision.</div>
     <div id="error" class="error hidden"></div>
   </div>
 </section>
 
 <section id="map" class="map hidden">
-  <div class="node"><span>YOUR DECISION</span><h2 id="decisionText"></h2></div><div class="arrow">↓</div>
-  <div class="node"><span>LOAD-BEARING ASSUMPTIONS</span><div id="claims" class="rows"></div></div><div class="arrow">↓</div>
-  <div class="node"><span>ADVERSARIAL REVIEW</span><div id="metrics"></div><div id="rounds" class="rounds"></div><div id="challenges" class="challenge-list"></div></div><div class="arrow">↓</div>
-  <div class="stop">STOP REVIEW <small id="termination"></small></div><div class="arrow">↓</div>
-  <div class="action"><span>DETERMINISTIC DECISION GATE</span><strong id="action"></strong><div id="gateTrace" class="gate-trace"></div><p id="actionReason"></p><div id="nextAction" class="next-action"></div><button id="download" class="secondary hidden">Download Ledger</button></div>
+  <div id="demoBanner" class="demo-banner hidden">DEMO — canned output for a fixed example. The ledger, stop rule, and gate below are the real code path.</div>
+
+  <div class="node"><span>DECISION</span><h2 id="decisionText"></h2><p id="contextText" class="muted"></p></div><div class="arrow">↓</div>
+
+  <div class="node"><span>WHAT MUST BE TRUE</span><p class="muted">The Builder's claims. If one is false, the decision does not hold.</p><div id="claims" class="rows"></div></div><div class="arrow">↓</div>
+
+  <div class="node"><span>CHALLENGES</span><p class="muted">The Adversary's objections. Each is rated by what it does to the decision if it stays unresolved.</p>
+    <div class="legend"><span class="pill fatal">FATAL</span> abandon &nbsp; <span class="pill blocking">BLOCKING</span> wait &nbsp; <span class="pill material">MATERIAL</span> act, carry as risk &nbsp; <span class="pill non_blocking">NON_BLOCKING</span> act, record</div>
+    <div id="challenges" class="challenge-list"></div>
+  </div><div class="arrow">↓</div>
+
+  <div class="stop">REVIEW STOPPED<small id="rounds"></small><small id="termination"></small></div><div class="arrow">↓</div>
+
+  <div class="action"><span>THE GATE</span>
+    <table class="rule-table" id="ruleTable">
+      <tr data-rule="UNRESOLVED_FATAL"><td>any unresolved FATAL</td><td>→ ABANDON</td></tr>
+      <tr data-rule="UNRESOLVED_BLOCKING"><td>else any unresolved BLOCKING</td><td>→ WAIT</td></tr>
+      <tr data-rule="NO_UNRESOLVED_FATAL_OR_BLOCKING"><td>else</td><td>→ ACT</td></tr>
+    </table>
+    <strong id="action"></strong>
+    <p id="trigger"></p>
+    <div id="nextAction" class="next-action"></div>
+    <button id="download" class="secondary hidden">Download ledger</button>
+  </div>
 </section>
 </main><script src="app.js"></script></body></html>

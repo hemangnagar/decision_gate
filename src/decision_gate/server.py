@@ -7,7 +7,7 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
-from .demo import DemoAdversary, DemoBuilder
+from .demo import DEMO_CONTEXT, DEMO_DECISION, DemoAdversary, DemoBuilder
 from .providers import LiteLLMProvider
 from .runner import run_review
 
@@ -26,6 +26,12 @@ class DecisionGateHandler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def do_GET(self) -> None:
+        if self.path == "/api/demo":
+            self._json(200, {"decision": DEMO_DECISION, "context": DEMO_CONTEXT})
+            return
+        super().do_GET()
+
     def do_POST(self) -> None:
         if self.path != "/api/review":
             self._json(404, {"error": "not found"})
@@ -39,6 +45,8 @@ class DecisionGateHandler(SimpleHTTPRequestHandler):
             max_rounds = max(1, min(int(data.get("max_rounds", 3)), 5))
 
             if mode == "demo":
+                # The canned providers only make sense for the fixed example.
+                decision, context = DEMO_DECISION, DEMO_CONTEXT
                 builder, adversary = DemoBuilder(), DemoAdversary()
             else:
                 builder_model = str(data.get("builder_model") or os.getenv("DECISION_GATE_BUILDER_MODEL", ""))
@@ -55,6 +63,7 @@ class DecisionGateHandler(SimpleHTTPRequestHandler):
                 adversary=adversary,
                 max_rounds=max_rounds,
             )
+            ledger["mode"] = mode
             self._json(200, ledger)
         except Exception as exc:
             self._json(400, {"error": str(exc)})
