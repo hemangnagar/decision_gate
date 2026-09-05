@@ -1,0 +1,1 @@
+document.getElementById('review').onclick=()=>{const d=document.getElementById('decision').value.trim();if(!d)return;document.getElementById('decisionText').textContent=d;document.getElementById('map').classList.remove('hidden');document.getElementById('map').scrollIntoView({behavior:'smooth'});};
