@@ -4,7 +4,7 @@ import argparse
 import json
 from pathlib import Path
 
-from .gate import evaluate_gate, should_stop
+from .gate import evaluate_gate, evaluate_if_resolved, should_stop
 from .lifecycle import check_reopen, score_outcomes
 from .providers import LiteLLMProvider
 from .runner import run_review
@@ -85,6 +85,9 @@ def main() -> None:
             print("Accepted risks:")
             for risk in result.accepted_risks:
                 print(f"- {risk}")
+        if result.triggering_challenges:
+            after = evaluate_if_resolved(ledger, result.triggering_challenges)
+            print(f"If triggering challenges were resolved: {after.action}")
     elif args.cmd == "stop":
         stop, reason = should_stop(ledger.get("review_rounds", []), args.max_rounds)
         print("STOP" if stop else "CONTINUE")
