@@ -1,11 +1,28 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Decision Gate</title><link rel="stylesheet" href="styles.css"></head>
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Decision Gate</title><link rel="stylesheet" href="styles.css"></head>
 <body><main>
-<section class="hero"><div class="eyebrow">ADVERSARIAL DECISION REVIEW</div><h1>Challenge the decision.<br>Then make one.</h1><p>Identify what must be true, attack the load-bearing assumptions, stop when more analysis stops helping, and commit to ACT, WAIT, or ABANDON.</p><div class="input"><textarea id="decision">Should we build an open-source adversarial decision ledger?</textarea><button id="review">Challenge My Decision</button></div></section>
+<section class="hero">
+  <div class="eyebrow">ADVERSARIAL DECISION REVIEW</div>
+  <h1>Challenge the decision.<br>Then make one.</h1>
+  <p>Identify what must be true, attack the load-bearing assumptions, stop when more analysis stops helping, and commit to ACT, WAIT, or ABANDON.</p>
+  <div class="input-card">
+    <textarea id="decision" placeholder="What decision are you trying to make?">Should we build a cardiology-focused procedure operations agent?</textarea>
+    <textarea id="context" class="context" placeholder="Optional context, constraints, or evidence"></textarea>
+    <div class="controls">
+      <select id="mode"><option value="demo">Demo — no API key</option><option value="live">Live models via LiteLLM</option></select>
+      <input id="builderModel" placeholder="Builder model, e.g. openai/..." class="model hidden">
+      <input id="adversaryModel" placeholder="Adversary model, e.g. anthropic/..." class="model hidden">
+      <button id="review">Challenge My Decision</button>
+    </div>
+    <div id="error" class="error hidden"></div>
+  </div>
+</section>
+
 <section id="map" class="map hidden">
-<div class="node"><span>YOUR DECISION</span><h2 id="decisionText"></h2></div><div class="arrow">↓</div>
-<div class="node"><span>LOAD-BEARING ASSUMPTIONS</span><div class="rows"><div>✓ Generic debate is already crowded</div><div>✓ A spec alone is not enough</div><div>! Outcome scoring requires real resolved decisions</div></div></div><div class="arrow">↓</div>
-<div class="node"><span>ADVERSARIAL REVIEW</span><div class="metric fatal">2 FATAL — resolved by pivot</div><div class="metric material">1 MATERIAL — accepted risk</div><div class="rounds">Round 1 <b>3</b> new material findings · Round 2 <b>2</b> · Round 3 <b>0</b></div></div><div class="arrow">↓</div>
-<div class="stop">STOP REVIEW <small>Additional review value: negligible</small></div><div class="arrow">↓</div>
-<div class="action"><span>DECISION SUFFICIENT</span><strong>ACT</strong><p>Build the smallest MVP. Review is closed until materially new evidence appears.</p></div>
+  <div class="node"><span>YOUR DECISION</span><h2 id="decisionText"></h2></div><div class="arrow">↓</div>
+  <div class="node"><span>LOAD-BEARING ASSUMPTIONS</span><div id="claims" class="rows"></div></div><div class="arrow">↓</div>
+  <div class="node"><span>ADVERSARIAL REVIEW</span><div id="metrics"></div><div id="rounds" class="rounds"></div><div id="challenges" class="challenge-list"></div></div><div class="arrow">↓</div>
+  <div class="stop">STOP REVIEW <small id="termination"></small></div><div class="arrow">↓</div>
+  <div class="action"><span>DECISION GATE</span><strong id="action"></strong><p id="actionReason"></p><div id="nextAction" class="next-action"></div></div>
 </section>
 </main><script src="app.js"></script></body></html>
