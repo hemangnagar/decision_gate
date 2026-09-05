@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Callable
 
 from .gate import evaluate_gate, evaluate_if_resolved, should_stop
 from .prompts import ADVERSARY_PROMPT, ADVERSARY_SYSTEM, BUILDER_PROMPT, BUILDER_SYSTEM
@@ -39,10 +39,19 @@ def run_review(
     builder: Provider,
     adversary: Provider,
     max_rounds: int = 3,
+    progress: Callable[[str], None] | None = None,
 ) -> dict[str, Any]:
+    """Run a Builder/Adversary review and return the ledger.
+
+    ``progress`` (optional) receives one short line per stage - builder claim
+    count, each round's challenge tally, the stop reason and the gate action -
+    so a live run is not silent for minutes. It never affects the ledger.
+    """
     if not decision.strip():
         raise ValueError("decision is required")
+    say = progress or (lambda _msg: None)
 
+    say(f"builder ({getattr(builder, 'model', '?')}): drafting claims...")
     built = builder.generate_json(
         system=BUILDER_SYSTEM,
         prompt=BUILDER_PROMPT.format(decision=decision.strip(), context=context.strip() or "(none)"),
@@ -50,6 +59,7 @@ def run_review(
     claims = _normalize_claims(list(built.get("claims") or []))
     if not claims:
         raise ValueError("builder returned no claims")
+    say(f"builder: {len(claims)} claims")
 
     ledger: dict[str, Any] = {
         "id": f"DG-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}",
@@ -64,6 +74,7 @@ def run_review(
 
     challenge_counter = 0
     for round_no in range(1, max_rounds + 1):
+        say(f"round {round_no}/{max_rounds} ({getattr(adversary, 'model', '?')}): adversary reviewing...")
         result = adversary.generate_json(
             system=ADVERSARY_SYSTEM,
             prompt=ADVERSARY_PROMPT.format(
@@ -109,9 +120,15 @@ def run_review(
                 "completed_at": _now(),
             }
         )
+        tally = ", ".join(
+            f"{n} {m}" for m in ("FATAL", "BLOCKING", "MATERIAL", "NON_BLOCKING")
+            if (n := sum(c["materiality"] == m for c in new_challenges))
+        ) or "nothing new"
+        say(f"round {round_no}: {len(new_challenges)} new challenges ({tally})")
         stop, reason = should_stop(ledger["review_rounds"], max_rounds=max_rounds)
         if stop:
             ledger["termination"] = {"reason": reason, "round": round_no, "closed_at": _now()}
+            say(f"stopping: {reason}")
             break
 
     if "termination" not in ledger:
@@ -127,6 +144,7 @@ def run_review(
         "committed_at": _now(),
         "gate": "deterministic-v1",
     }
+    say(f"gate: {gate.action} ({gate.matched_rule})")
     if gate.triggering_challenges:
         after = evaluate_if_resolved(ledger, gate.triggering_challenges)
         ledger["commitment"]["if_triggers_resolved"] = {

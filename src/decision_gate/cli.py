@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 from .gate import evaluate_gate, evaluate_if_resolved, should_stop
@@ -29,6 +30,7 @@ def main() -> None:
     r.add_argument("--adversary-model", required=True)
     r.add_argument("--max-rounds", type=int, default=3)
     r.add_argument("--out")
+    r.add_argument("--quiet", action="store_true", help="suppress progress lines on stderr")
 
     ro = s.add_parser("reopen")
     ro.add_argument("ledger")
@@ -48,6 +50,7 @@ def main() -> None:
             builder=LiteLLMProvider(args.builder_model),
             adversary=LiteLLMProvider(args.adversary_model),
             max_rounds=args.max_rounds,
+            progress=None if args.quiet else (lambda msg: print(msg, file=sys.stderr, flush=True)),
         )
         text = json.dumps(ledger, indent=2)
         if args.out:
