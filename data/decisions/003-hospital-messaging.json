@@ -1,0 +1,355 @@
+{
+  "id": "DG-20260905192513",
+  "decision": "Should a 300-bed community hospital replace pagers with a secure clinical messaging app within 12 months?",
+  "context": "",
+  "created_at": "2026-09-05T19:25:13.753568+00:00",
+  "claims": [
+    {
+      "id": "CL-001",
+      "title": "Pager workflow imposes measurable clinical cost",
+      "statement": "Current pager-based communication produces quantifiable harm \u2014 e.g., median callback latency above 10 minutes, a documented rate of missed or misrouted pages, or clinician-reported time lost to phone tag \u2014 as measured in the hospital's own communication audit rather than from vendor or industry benchmarks.",
+      "kind": "FACT",
+      "depends_on": []
+    },
+    {
+      "id": "CL-002",
+      "title": "Wireless coverage is adequate hospital-wide",
+      "statement": "Wi-Fi and/or cellular coverage meets a defined signal threshold in 100% of clinical spaces including stairwells, elevators, basement radiology, MRI suites, and the ED, verified by a site survey before contract signature; pagers currently penetrate these areas where data networks may not.",
+      "kind": "DEPENDENCY",
+      "depends_on": []
+    },
+    {
+      "id": "CL-003",
+      "title": "Messaging app meets or exceeds pager reliability",
+      "statement": "The selected app achieves delivery reliability and uptime for time-critical alerts (codes, STEMI, stroke, rapid response) at least equal to the existing paging system, with a defined fallback path when the app, network, or a clinician's device fails.",
+      "kind": "ASSUMPTION",
+      "depends_on": []
+    },
+    {
+      "id": "CL-004",
+      "title": "Clinician adoption is achievable within the window",
+      "statement": "A supermajority of attending physicians, hospitalists, community-based specialists, and nursing staff will actively use the app rather than route around it, including independent/affiliated physicians the hospital cannot mandate, and including staff unwilling to install work software on personal devices absent a hospital-provided handset.",
+      "kind": "ASSUMPTION",
+      "depends_on": []
+    },
+    {
+      "id": "CL-005",
+      "title": "Integration with clinical systems is scoped and feasible",
+      "statement": "The app integrates with the EHR, on-call scheduling, nurse call, and alarm/telemetry systems to resolve 'who is covering this patient right now' automatically; without this, the app reproduces paging's directory problem in a new interface.",
+      "kind": "DEPENDENCY",
+      "depends_on": []
+    },
+    {
+      "id": "CL-006",
+      "title": "Total cost is funded and understood",
+      "statement": "Multi-year total cost of ownership \u2014 licensing, integration engineering, device provisioning, MDM, training, support staffing, and parallel-run of pagers during transition \u2014 is budgeted and compares favorably to continued paging costs, with pager contract exit terms known.",
+      "kind": "FACT",
+      "depends_on": []
+    },
+    {
+      "id": "CL-007",
+      "title": "Security and compliance posture is defensible",
+      "statement": "The deployment satisfies HIPAA requirements for PHI in transit and at rest, supports remote wipe and device loss handling, defines message retention as part of (or explicitly outside) the legal medical record, and passes a security review before go-live.",
+      "kind": "DEPENDENCY",
+      "depends_on": []
+    },
+    {
+      "id": "CL-008",
+      "title": "12 months is the right forcing constraint",
+      "statement": "Completing replacement within 12 months is worth more than a longer phased rollout \u2014 i.e., the organization judges that schedule pressure will produce better outcomes than allowing coverage remediation, integration, and adoption work to set their own pace, and accepts the risk of cutover during an incomplete state.",
+      "kind": "VALUE_JUDGMENT",
+      "depends_on": []
+    }
+  ],
+  "challenges": [
+    {
+      "id": "CH-001",
+      "target_claim": "CL-003",
+      "title": "Pagers are the out-of-band channel; the app cannot be its own fallback",
+      "argument": "Paging runs on a physically separate RF network with no dependency on hospital IT, Wi-Fi, internet transit, or the EHR. A secure messaging app depends on the same infrastructure that fails in exactly the scenarios where communication matters most: ransomware, network core failure, ISP outage, power/UPS events, or a vendor cloud outage. CL-003 asks for 'a defined fallback path,' but if pagers are decommissioned there is no out-of-band path left \u2014 the fallback becomes overhead paging and runners. This makes 'replace' structurally different from 'add': the decision as framed removes a redundancy layer that emergency-management standards and most downtime procedures assume exists. Full replacement is likely the wrong shape of decision regardless of how good the app is.",
+      "materiality": "FATAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "Either (a) the decision is rescoped to a hybrid \u2014 app for routine/coordination traffic, retained pager or equivalent out-of-band channel for code/critical alerting and IT-downtime operations \u2014 or (b) an executed downtime tabletop exercise demonstrates that a total network/EHR outage can be run to standard with no paging infrastructure, signed off by emergency management and the medical executive committee.",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-002",
+      "target_claim": "CL-003",
+      "title": "Delivery depends on third-party push infrastructure and OS power management",
+      "argument": "App alert delivery traverses Apple APNs / Google FCM and is subject to per-device OS behavior: Doze/App Standby, Low Power Mode, Focus/DND, notification permission revocation, background app termination, and carrier-side delays. None of these are controllable by the hospital or the vendor, and none have an analogue in one-way simplex paging, where the receiver is a dumb always-listening device. 'Reliability at least equal to paging' for time-critical alerts is therefore not achievable through vendor SLA language alone \u2014 the SLA typically covers the vendor's servers, not last-mile notification delivery to a clinician's phone in a pocket at 3am.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "A live pilot on the actual device fleet measuring end-to-end alert delivery (send \u2192 visible/audible on locked device) with per-attempt logging over \u226530 days and \u22651000 critical-priority test alerts, reporting p99 latency and non-delivery rate against the paging system's measured baseline, including devices in Low Power Mode and after 24h+ of background inactivity.",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-003",
+      "target_claim": "CL-002",
+      "title": "100% coverage is unachievable by design in some spaces, and coverage is not static",
+      "argument": "MRI suites are deliberately RF-shielded Faraday enclosures; some ORs, cath labs, lead-lined radiology rooms, and older concrete stairwells/elevator shafts are similarly hostile. A one-time pre-contract site survey also measures a snapshot: coverage degrades with patient/visitor device density, new equipment, seasonal census, and construction. Writing the dependency as '100% of clinical spaces, verified before contract signature' makes it either false on day one or satisfied by a survey generous enough to be meaningless \u2014 and the remediation cost (DAS, additional APs, cabling in shielded spaces) is a capital line item that CL-006 does not appear to carry.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "A heat-map survey performed at peak census with production-representative client devices, plus a costed remediation plan for every failing zone, plus an explicit written list of zones that will remain uncovered and the specific alternate communication procedure for each \u2014 with that remediation capital cost folded into the CL-006 TCO.",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-004",
+      "target_claim": "CL-001",
+      "title": "Callback latency is likely caused by clinician availability, not by the medium",
+      "argument": "The claim attributes measured latency to pagers, but a 10-minute median callback usually reflects the recipient being scrubbed in, at another bedside, driving, or triaging competing pages \u2014 none of which a new interface fixes. Substituting the medium changes where the delay is visible, not whether it exists. Worse, the observed pattern after messaging rollouts is a large increase in message volume (lower send cost per message) and alert fatigue, which can degrade response to the highest-acuity messages. The audit as specified measures the symptom without isolating the cause, so it cannot support the inference that replacement produces the improvement.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "The communication audit segments latency by cause (recipient unavailable vs. wrong recipient vs. phone-tag/no callback line vs. directory error) and shows that the routable-by-technology causes \u2014 misroute, directory error, phone tag \u2014 account for a majority of lost time; plus a pilot unit shows total interruption volume did not rise materially post-deployment.",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-005",
+      "target_claim": "CL-004",
+      "title": "Partial adoption is worse than either endpoint",
+      "argument": "CL-004 treats adoption as a threshold to clear, but the failure mode is not 'no benefit' \u2014 it is negative benefit. If community specialists, per-diem nurses, and BYOD refusers stay on pagers while everyone else moves, senders must now know which channel each recipient uses for each shift. That is a new class of routing error with no pager-era equivalent, and it lands disproportionately on the highest-acuity consult requests to exactly the affiliated physicians the hospital cannot mandate. A 'supermajority' target therefore describes the most dangerous steady state, not a success condition.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "A per-cohort commitment inventory (employed MDs, hospitalists, each affiliated specialty group, nursing by unit, ancillary) showing \u226595% committed coverage in the cohorts that receive critical/consult traffic, OR a design in which the app transparently bridges to pager/SMS for non-adopters so the sender never chooses a channel \u2014 validated in pilot.",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-006",
+      "target_claim": "CL-004",
+      "title": "BYOD creates wage-hour and labor-relations exposure not priced in",
+      "argument": "Pushing clinical messaging onto personal phones for non-exempt staff (nurses, techs) creates compensable-time exposure when they read or respond off-shift, and reachability expectations that may be a mandatory subject of bargaining where staff are unionized. Personal-device stipend policy, MDM consent on personal hardware, and discoverability of a personal phone in litigation are all live objections that typically surface after contract signature and can stall rollout or force a full hospital-issued handset fleet \u2014 a cost step change of hundreds of devices plus lifecycle replacement.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "Written sign-off from HR/legal and any bargaining units on off-shift response expectations, stipend or device-provision policy, and MDM scope on personal devices, with the resulting handset count and lifecycle cost priced into CL-006.",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-007",
+      "target_claim": "CL-005",
+      "title": "The directory problem is data governance, not integration",
+      "argument": "Auto-resolving 'who is covering this patient right now' requires an authoritative, real-time, complete on-call and assignment source. In most 300-bed community hospitals that source does not exist: on-call schedules live in departmental spreadsheets, are amended by phone swaps that never get recorded, and nurse assignment lives on a whiteboard. Integrating to those sources propagates stale data faster and with more false authority than a human operator who knows to call and check. The claim treats a governance problem as an interface problem.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "An audit sampling \u2265200 shift-hours across services comparing the electronic on-call/assignment record against who was actually covering, showing \u226598% accuracy \u2014 or a funded workstream (owner, deadline, enforcement mechanism for swap recording) to reach it before cutover.",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-008",
+      "target_claim": "CL-005",
+      "title": "EHR and alarm-system interface lead times likely exceed the 12-month window",
+      "argument": "Bidirectional EHR integration, nurse call, and alarm/telemetry middleware each require vendor-side interface work, scheduled slots in the EHR vendor's queue, and \u2014 for alarm/telemetry routing to a mobile device \u2014 potential FDA/medical-device-data-system scoping and clinical alarm-management review under Joint Commission NPSG.06.01.01. Telemetry alarm routing in particular is a different risk class from secure texting and is commonly deferred out of a first phase. Scoping all of this to complete inside 12 months alongside coverage remediation is the assumption most likely to fail silently.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "Written, dated interface commitments from the EHR, nurse call, and telemetry/middleware vendors with named engineering slots, plus a clinical alarm-management risk assessment determining whether alarm routing is in or out of phase one.",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-009",
+      "target_claim": "CL-006",
+      "title": "Parallel-run is permanent, not transitional, so the cost-avoidance case is overstated",
+      "argument": "CL-006 books pager parallel-run as a transition cost. If any of the following hold \u2014 shielded/dead zones remain, code teams keep a redundant channel, downtime procedures require out-of-band comms, or non-mandatable affiliated physicians decline the app \u2014 pagers stay in service indefinitely and their cost never comes off the books. Since community-hospital paging is typically a very low monthly per-device spend, the business case never had much cost avoidance to harvest; it rests on quality and time-savings benefits that are difficult to attribute and rarely audited post-hoc. The comparison 'compares favorably to continued paging costs' may be comparing against a number too small to matter.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "TCO restated under a base case that assumes pagers are retained permanently for critical alerting and downtime, with the app justified on explicit, measurable quality/throughput targets (e.g., consult turnaround, code response, discharge-order latency) and a committed post-go-live measurement plan.",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-010",
+      "target_claim": "CL-007",
+      "title": "Retention decisions create discovery and documentation-of-record exposure either way",
+      "argument": "The claim treats retention as a binary to be declared, but both branches carry cost. If messages are inside the legal medical record, every clinical decision discussed in chat must be retrievable, releasable on ROI requests, and produced in litigation \u2014 a real e-discovery and HIM workload. If they are declared outside it, clinicians will nonetheless make care decisions in chat that never reach the note, creating documentation gaps and a plaintiff-friendly narrative that the hospital ran a shadow record it chose not to keep. The 'explicitly outside' option is also not fully within the hospital's power to declare \u2014 a court decides discoverability.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "A retention position drafted by outside health-law counsel that survives an adverse-scenario review, plus an HIM/risk estimate of the incremental e-discovery and ROI workload, plus a documented clinical policy on what must be transcribed into the chart from chat.",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-011",
+      "target_claim": "CL-008",
+      "title": "The 12-month deadline appears to be an input, not a conclusion",
+      "argument": "The claim asserts schedule pressure is worth more than letting the work set its own pace, but nothing in the claim set derives 12 months from anything \u2014 not a pager contract expiry, not a clinical harm rate, not a regulatory date. If the deadline originates from a budget cycle or a vendor discount window, it is optimizing for procurement convenience against the dependency chain in CL-002, CL-004, and CL-005. Cutover during an incomplete state, in a hospital, means clinicians experience the new system as unreliable at first contact \u2014 and clinician trust in a communication system, once lost, is very expensive to rebuild. A messaging rollout gets one credible launch.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "Documentation of what specifically forces 12 months (pager contract termination date, capital appropriation expiry, cited harm rate), plus a stated go/no-go gate model in which failure of CL-002, CL-004, or CL-005 delays cutover rather than shrinking scope \u2014 and confirmation that the cutover window avoids winter census peak, EHR upgrades, and residency turnover.",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-012",
+      "target_claim": "CL-001",
+      "title": "One-way paging generates no delivery telemetry, so the baseline CL-001 asserts cannot actually be measured",
+      "argument": "CL-001 is typed as a FACT and demands the hospital's own audit produce a 'documented rate of missed or misrouted pages.' But simplex paging is a broadcast medium with no acknowledgment path: the paging system knows it transmitted, not whether the device received, whether the device was on, or whether the right person carried it. There is no log to audit. The only obtainable numbers are callback-latency samples reconstructed from switchboard records and clinician self-report \u2014 both of which measure the subset of pages that eventually produced a callback and are structurally blind to the pages that vanished. This has two consequences the claim set does not absorb: (a) the harm figure justifying replacement will be an estimate dressed as a measurement, and (b) the post-go-live benefit case demanded by CH-009's resolution has no baseline to be compared against, so the quality claim can never be falsified after the fact. A decision to remove a redundancy layer should not rest on a baseline that is unmeasurable in principle.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "Either (a) a prospective instrumented baseline study \u2014 e.g., 4-6 weeks of paired page/callback capture on a defined set of services with sender-side logging of intended recipient, send time, callback time, and adjudicated outcome (reached / wrong person / never answered) \u2014 establishing a defensible pre-state, or (b) explicit acknowledgment in the business case that no reliable pager baseline exists, and re-justification of the project on forward-looking measurable targets only, with the harm claim in CL-001 withdrawn as evidence.",
+      "raised_in_round": 2
+    },
+    {
+      "id": "CH-013",
+      "target_claim": "CL-007",
+      "title": "HIPAA-safe notification design conflicts directly with the latency benefit in CL-001",
+      "argument": "CL-007 requires PHI protection in transit and at rest, which in practice forces content-suppressed lock-screen notifications ('You have a new secure message'), device passcode/biometric enforcement via MDM, and short inactivity session timeouts. Each of those inserts an unlock-plus-authenticate step between alert and comprehension. In the pager model the clinician reads callback number and often a coded reason at a glance without authenticating. So the security posture that makes CL-007 defensible partially consumes the speed gain that makes CL-001 worth acting on \u2014 and it does so unevenly, hitting hardest in gloved, scrubbed, or gowned contexts where biometrics fail. The claim set treats security and clinical benefit as independent dependencies; they trade against each other and no one appears to have priced the trade.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "Pilot measurement of alert-to-comprehension time (not alert-to-delivery) under the actual production security configuration \u2014 content-suppressed notifications, enforced passcode/biometric, production session timeout \u2014 segmented by context (gloved/scrubbed, sterile field, in-vehicle), compared against pager glance-to-comprehension for equivalent traffic; plus a written security-review determination of which notification-content compromises are acceptable.",
+      "raised_in_round": 2
+    },
+    {
+      "id": "CH-014",
+      "target_claim": "CL-007",
+      "title": "Identity lifecycle for non-employed clinicians is the weak point, not the app's crypto",
+      "argument": "The claim frames compliance around encryption, remote wipe, and retention \u2014 the vendor-controlled parts. The actual exposure at a community hospital is identity lifecycle for people who are not in the hospital's directory: affiliated/community specialists, locums, agency nurses, rotating residents and students, and per-diem staff. These accounts are typically provisioned by ad hoc request and deprovisioned by nobody, because there is no HR termination event to trigger it. The result is a population of persistent, PHI-bearing app accounts on personal devices belonging to people who no longer have privileges. Pagers have the same governance gap but hold no PHI and no message history, so the breach surface is nil. Replacing pagers converts a benign directory-hygiene problem into a reportable-breach problem, and CL-007's 'passes a security review before go-live' does not cover a defect that only manifests 18 months in.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "A documented joining/leaving process with a named owner tying app account status to the medical staff office credentialing/privileging system and to agency and GME rotation rosters, with an automated quarterly reconciliation report and a demonstrated deprovisioning test (account disabled and device data wiped within a stated SLA) for each non-employed cohort.",
+      "raised_in_round": 2
+    },
+    {
+      "id": "CH-015",
+      "target_claim": "CL-006",
+      "title": "Full replacement destroys renewal leverage on a life-safety dependency",
+      "argument": "CL-006 evaluates cost against continued paging spend but does not price the change in bargaining position. Paging is a commodity with multiple interchangeable providers and near-zero switching cost. A clinical messaging platform, once integrated to the EHR, on-call scheduling, and nurse call, and once paging is decommissioned, is a single-vendor dependency for critical clinical communication with a switching cost measured in a second full integration and retraining program. Renewal pricing three to five years out is then set by a counterparty that knows the hospital cannot walk. Vendor consolidation in this market is active, so the entity holding that contract at renewal may not be the one that signed it. A 300-bed community hospital has little procurement leverage to begin with; 'replace' is precisely the choice that spends what leverage exists.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "Executed contract terms covering multi-year price escalation caps, assignment/change-of-control protections, source-data portability (full message and audit-log export in a documented format), and a defined transition-assistance obligation on termination \u2014 plus a costed switching-cost estimate carried in the TCO so the renewal exposure is visible to the board.",
+      "raised_in_round": 2
+    },
+    {
+      "id": "CH-016",
+      "target_claim": "CL-003",
+      "title": "Read receipts create a new premature-closure failure mode with no pager analogue",
+      "argument": "In the pager model the sender's loop closes only on a callback: silence is unambiguous and the sender knows to escalate. Secure messaging inserts 'delivered' and 'read' states that look like closure but are not. A clinician who glances at a notification while scrubbing, or whose phone marks a message read on a lock-screen preview, generates a 'read' that the sender treats as acceptance of clinical responsibility. This is a genuinely new hazard class \u2014 it converts an obvious failure (no callback) into a silent one (read, not acted on) \u2014 and it lands hardest on the highest-acuity traffic where the sender then stops escalating. CL-003 addresses fallback for system failure but not for this human-protocol failure, and 'reliability at least equal to paging' does not capture it because the message was delivered successfully.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "A configured and tested escalation policy for critical/consult traffic in which 'read' does not terminate escalation \u2014 explicit accept/decline acknowledgment required, auto-escalation to a named backup and then to switchboard/overhead on timeout \u2014 validated in pilot with logged evidence of escalation firing correctly, plus a written clinical policy stating that read receipts do not constitute transfer of responsibility.",
+      "raised_in_round": 2
+    },
+    {
+      "id": "CH-017",
+      "target_claim": "CL-004",
+      "title": "Shared-handset physical logistics are the usual cause of adoption collapse and are absent from the claim",
+      "argument": "CL-004 frames adoption as a willingness question, but where hospitals provide handsets (the necessary answer to BYOD refusal raised in CH-006), adoption typically fails on physical operations rather than attitude: batteries that do not survive a 12-hour shift with a bright screen and constant push wake-ups, charging bay contention at shift change, devices not returned or returned uncharged, infection-control requirements for disinfection between users against manufacturer surface-compatibility limits, and \u2014 most damaging \u2014 the shift-handoff step where the incoming nurse must log in and inherit the correct assignment. Miss that step and messages route to a clinician who went home, which is a routing failure with no pager equivalent because pagers are handed over as objects. Pagers hold a battery for weeks and require no login. None of this appears in CL-004 or in CL-006's cost list.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "A unit-level pilot of at least 60 days measuring device availability at shift start, charged-device rate, login/handoff compliance rate, misroute incidents attributable to stale shift assignment, and disinfection compliance \u2014 with a costed logistics plan (device-to-staff ratio, charging infrastructure, spares pool, annual loss/breakage rate) folded into CL-006.",
+      "raised_in_round": 2
+    },
+    {
+      "id": "CH-018",
+      "target_claim": "CL-008",
+      "title": "The 12-month window consumes clinical informatics capacity that is not fungible",
+      "argument": "CL-008 weighs schedule pressure only against the project's own dependency work. The binding constraint at a 300-bed community hospital is usually a clinical informatics and interface-engineering team of a handful of people who are simultaneously carrying EHR version upgrades, regulatory reporting changes, and existing integration break-fix. Compressing coverage remediation, four system integrations (CH-008), on-call data governance remediation (CH-007), and a device program into 12 months does not just risk this project slipping \u2014 it displaces or degrades that other work, and the displaced work may be non-optional. The value judgment as written cannot be made responsibly without knowing what the 12-month choice defers, and 'schedule pressure produces better outcomes' is a claim about this project in isolation.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "A named-resource capacity plan for the 12-month window showing FTE allocation by workstream against the informatics/interface team's committed roadmap, with an explicit written list of what is deferred or descoped to make room and sign-off from the owners of that deferred work.",
+      "raised_in_round": 2
+    },
+    {
+      "id": "CH-019",
+      "target_claim": "CL-002",
+      "title": "The coverage claim is scoped to hospital spaces, but on-call clinicians are reached off-campus",
+      "argument": "CL-002 defines adequacy as signal in clinical spaces inside the building. But the majority of high-consequence pages at a 300-bed community hospital go to someone who is not in the building: the on-call surgeon asleep at home, the community cardiologist driving in, the hospitalist covering from a second site. Wide-area paging is a high-power simulcast network engineered specifically for deep in-building penetration across a whole county, which is why it still works in a basement bedroom, a rural farmhouse, or a concrete parking structure where a single carrier's LTE bar drops out. A messaging app inherits whatever carrier each individual clinician personally chose, at whatever address they personally live, with no hospital control and no remediation option \u2014 the hospital cannot install a DAS in a physician's house. This is a different failure domain from the in-building shielded zones raised in CH-003 and is not remediable by capital spend; it is also invisible to any on-campus site survey, so a survey that fully satisfies CL-002 as written can still leave the most time-critical recipients unreachable.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "An off-campus reachability assessment covering every clinician on a critical call roster: home address and primary commute corridor mapped against their actual carrier's coverage, plus a 30-day test-alert program sending timed critical-priority alerts to on-call clinicians while off-campus with logged receipt time \u2014 showing non-delivery/latency parity with the paging system, or an explicit written policy that off-campus critical notification remains on pagers/telephone.",
+      "raised_in_round": 3
+    },
+    {
+      "id": "CH-020",
+      "target_claim": "CL-005",
+      "title": "Non-user and external originators lose their path to clinicians when pagers are removed",
+      "argument": "CL-005 scopes integration to internal clinical systems and frames the problem as recipient resolution. It ignores who originates traffic. A pager number is a universal, credential-free endpoint: the switchboard operator, an after-hours answering service, a referring physician's office, an outside ED requesting transfer, EMS, a reference lab calling a critical value, a family member routed by the operator, and the hospital's own overhead/code system can all reach a clinician with a phone call and no account, no app, no license, and no training. A secure messaging platform is a closed, licensed, credentialed community. Once pagers are decommissioned, every external originator must be handled by a human intermediary re-keying the request into the app, or by an SMS/telephony gateway that must itself be built, licensed, and reliability-tested. This is a category of dependency the claim set does not name at all \u2014 it is not the directory problem of CH-007 (who is covering) but the ingress problem (how does a non-user reach them), and it sits directly on the transfer-center and critical-result pathways where delay is most consequential.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "A documented inventory of every current originator of pager traffic (switchboard, answering service, transfer center, outside EDs/EMS, reference and internal lab, radiology critical results, family/operator-routed calls, code/rapid-response activation) with a specified, tested ingress path into the app for each \u2014 including licensing/cost for any external users, an operator console workflow, and a tested telephony/SMS gateway with measured latency \u2014 or an explicit decision to retain paging as the ingress channel for named originators.",
+      "raised_in_round": 3
+    },
+    {
+      "id": "CH-021",
+      "target_claim": "CL-006",
+      "title": "TCO is benchmarked only against the status quo; no cheaper alternative that captures most of the benefit was evaluated",
+      "argument": "CL-006 asks whether the app 'compares favorably to continued paging costs.' That is a two-option comparison against the weakest possible alternative, and it makes almost any investment look justified when the harms in CL-001 are real. The intermediate options are never priced: two-way alphanumeric paging or a paging web gateway with delivery acknowledgment (fixes the no-ack blindness in CH-012 at near-zero cost), fixing the on-call scheduling system alone (which CH-007 argues is where most misroute time actually originates), hospital-owned Wi-Fi voice badges or handsets already deployed in many nursing units, or deploying secure messaging for routine/coordination traffic only while leaving critical alerting on paging (the hybrid shape CH-001 already points to). Several of these capture a large fraction of the claimed benefit without the coverage remediation, integration, device fleet, adoption, and lock-in exposure raised elsewhere. Without that comparison the decision cannot show that full replacement is the efficient way to buy the improvement, only that it is better than doing nothing.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "A written options analysis costing at least four alternatives (status quo, on-call scheduling remediation alone, acknowledged/two-way paging, routine-traffic-only messaging with paging retained for critical alerting, and full replacement) against the same benefit targets, showing the marginal benefit of full replacement over the next-best option and the marginal cost of buying it.",
+      "raised_in_round": 3
+    },
+    {
+      "id": "CH-022",
+      "target_claim": "CL-007",
+      "title": "The medium creates new regulated-communication hazards \u2014 texted orders and verbal critical-result read-back",
+      "argument": "CL-007 frames compliance around PHI confidentiality: encryption, wipe, retention. The harder exposure is that a text-capable channel invites forms of clinical communication that regulators and accreditors specifically prohibit or constrain. CMS and Joint Commission position is that orders must be entered by the ordering practitioner via CPOE, not transmitted by secure text; once a chat channel exists between nurses and physicians at 2am, texted orders will occur regardless of policy, and each one is a survey finding and a documentation-of-record defect. Separately, critical laboratory and radiology results carry read-back/verbal-confirmation requirements under CLIA and NPSG.02.03.01 that a delivered-and-read message does not satisfy. Pagers structurally cannot carry an order or a result narrative \u2014 their poverty is a compliance control. Replacing them removes that control, and 'passes a security review before go-live' does not detect a violation pattern that only emerges from clinician behavior after go-live.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "A written clinical communication policy prohibiting orders and critical-result reporting by message, with technical enforcement or detection (keyword/pattern monitoring, order-phrase blocking, or routing of critical results to a verbal pathway), a monitoring plan with a named owner and periodic audit sampling, and a compliance/medical-staff-office sign-off that the design does not create a survey exposure under CPOE and read-back requirements.",
+      "raised_in_round": 3
+    },
+    {
+      "id": "CH-023",
+      "target_claim": "CL-003",
+      "title": "Reliability becomes the hospital's own 24/7 operational responsibility, which it likely lacks",
+      "argument": "CL-003 treats reliability as a property of the selected product. Paging is a vendor-operated utility with no hospital-side moving parts: no directory sync to break, no interface engine to hang, no certificate to expire, no OS update to regress notification behavior, no account lockouts. A messaging platform integrated to EHR, scheduling, and nurse call is a hospital-operated service whose most common failure modes are local and silent \u2014 a stalled HL7 feed leaving on-call assignments frozen from yesterday, an expired push certificate, an MDM policy change suppressing notifications, a directory sync that drops a service. A 300-bed community hospital typically has no 24/7 staffed NOC and no after-hours on-call interface engineer, so these failures are discovered by a clinician not getting a message at 3am \u2014 the exact case where discovery is too late. CL-003's 'defined fallback path' presupposes someone detects the failure and invokes it. Nothing in the claim set establishes monitoring or an after-hours response capability.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "A documented operational runbook with synthetic end-to-end alert monitoring (test alert sent and confirmed received on a real device at defined intervals) alarming to a staffed 24/7 on-call rotation, named after-hours escalation for interface/integration failures with a stated response SLA, a staleness alarm on the on-call and assignment feeds, and the associated support staffing cost carried in CL-006.",
+      "raised_in_round": 3
+    }
+  ],
+  "review_rounds": [
+    {
+      "round": 1,
+      "new_challenges": 11,
+      "new_material_or_blocking": 11,
+      "completed_at": "2026-09-05T19:26:45.635928+00:00"
+    },
+    {
+      "round": 2,
+      "new_challenges": 7,
+      "new_material_or_blocking": 7,
+      "completed_at": "2026-09-05T19:28:19.911659+00:00"
+    },
+    {
+      "round": 3,
+      "new_challenges": 5,
+      "new_material_or_blocking": 5,
+      "completed_at": "2026-09-05T19:29:51.247806+00:00"
+    }
+  ],
+  "review_policy": {
+    "max_rounds": 3,
+    "stop_on_no_new_material": true
+  },
+  "termination": {
+    "reason": "Maximum review rounds reached (3).",
+    "round": 3,
+    "closed_at": "2026-09-05T19:29:51.247806+00:00"
+  },
+  "commitment": {
+    "action": "ABANDON",
+    "matched_rule": "UNRESOLVED_FATAL",
+    "triggering_challenges": [
+      "CH-001"
+    ],
+    "reasons": [
+      "Fatal unresolved challenge: Pagers are the out-of-band channel; the app cannot be its own fallback"
+    ],
+    "accepted_risks": [],
+    "committed_at": "2026-09-05T19:29:51.247806+00:00",
+    "gate": "deterministic-v1",
+    "if_triggers_resolved": {
+      "action": "WAIT",
+      "matched_rule": "UNRESOLVED_BLOCKING",
+      "triggering_challenges": [
+        "CH-002",
+        "CH-003",
+        "CH-005",
+        "CH-007",
+        "CH-008",
+        "CH-011",
+        "CH-012",
+        "CH-019",
+        "CH-020",
+        "CH-021"
+      ],
+      "accepted_risks": []
+    }
+  }
+}

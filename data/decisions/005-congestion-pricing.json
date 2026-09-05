@@ -1,0 +1,412 @@
+{
+  "id": "DG-20260905195709",
+  "decision": "Should a mid-size US city pilot downtown congestion pricing for 18 months?",
+  "context": "",
+  "created_at": "2026-09-05T19:57:09.428449+00:00",
+  "claims": [
+    {
+      "id": "CL-001",
+      "title": "Legal authority exists",
+      "statement": "The city (or the state enabling it) has statutory authority to charge motorists for entering a defined downtown cordon, and no state preemption or federal highway-funding restriction blocks an 18-month pilot.",
+      "kind": "DEPENDENCY",
+      "depends_on": []
+    },
+    {
+      "id": "CL-002",
+      "title": "Congestion is measurably binding",
+      "statement": "Downtown peak-period travel speeds, delay per vehicle-mile, or curb/intersection saturation are currently degraded enough that a price-responsive reduction of 10-20% in entering vehicles would produce a detectable improvement.",
+      "kind": "FACT",
+      "depends_on": []
+    },
+    {
+      "id": "CL-003",
+      "title": "Demand is price-elastic at feasible toll levels",
+      "statement": "A politically survivable charge (roughly $2-$8 per entry) will shift enough trips by time, mode, route, or cancellation to hit the targeted vehicle reduction in a mid-size city, not just in dense megacities like London, Stockholm, or NYC.",
+      "kind": "ASSUMPTION",
+      "depends_on": []
+    },
+    {
+      "id": "CL-004",
+      "title": "Viable alternatives exist for priced-out trips",
+      "statement": "Transit frequency, park-and-ride, biking, and off-peak options can absorb the diverted trips at acceptable service quality, or funding is committed to expand them before the pilot starts.",
+      "kind": "DEPENDENCY",
+      "depends_on": []
+    },
+    {
+      "id": "CL-005",
+      "title": "Capital and operating costs are recoverable within the pilot horizon",
+      "statement": "Gantry/ANPR or geofenced enforcement, billing, exemptions processing, and evaluation cost less than projected 18-month revenue plus allocated grant funding, or the deficit is explicitly accepted as an evaluation expense.",
+      "kind": "FACT",
+      "depends_on": []
+    },
+    {
+      "id": "CL-006",
+      "title": "18 months yields decision-grade evidence",
+      "statement": "The pilot period is long enough for behavior to stabilize past the novelty period (typically 3-6 months) and to collect at least one full seasonal cycle of traffic, transit ridership, downtown retail sales, and air-quality data against a pre-defined baseline and control corridor.",
+      "kind": "ASSUMPTION",
+      "depends_on": []
+    },
+    {
+      "id": "CL-007",
+      "title": "Downtown business impact is non-fatal",
+      "statement": "Retail, restaurant, and office-occupancy effects during the pilot will be neutral to positive, or negative effects will be small enough and offset (e.g., revenue rebates, resident/low-income exemptions) that the downtown economy is not materially harmed before results are in.",
+      "kind": "ASSUMPTION",
+      "depends_on": []
+    },
+    {
+      "id": "CL-008",
+      "title": "Charging for road access is an acceptable equity trade",
+      "statement": "The city judges that pricing scarce road space, with revenue recycled into transit or low-income credits, is fairer than the status quo of rationing by delay \u2014 and is willing to defend that judgment publicly.",
+      "kind": "VALUE_JUDGMENT",
+      "depends_on": []
+    }
+  ],
+  "challenges": [
+    {
+      "id": "CH-001",
+      "target_claim": "CL-001",
+      "title": "Federal-aid highway free-use rule and NEPA can gate the pilot regardless of state authority",
+      "argument": "State enabling authority is necessary but not sufficient. If any street inside or feeding the cordon has received federal aid, 23 U.S.C. 301 generally bars tolling absent an explicit federal program agreement (e.g., a VPPP/Value Pricing slot or equivalent FHWA approval), and that approval process typically triggers environmental review. NYC's program consumed roughly four years in federal review and litigation even after state authorization. A claim scoped only to 'state preemption' understates the binding constraint, and an 18-month pilot cannot absorb a multi-year federal review timeline.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "Written FHWA/state DOT confirmation identifying the specific federal authority or exemption applicable to every cordon-boundary and interior facility, plus a documented environmental-review pathway (CatEx vs. EA) with an agency-estimated schedule that fits before pilot start.",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-002",
+      "target_claim": "CL-002",
+      "title": "Post-2020 downtown demand may have already removed the congestion the pilot is priced to fix",
+      "argument": "Mid-size US downtowns have seen persistent office-attendance declines and flattened peak profiles. If peak delay is now concentrated in a handful of intersections and a 60-90 minute window, a 10-20% cordon-wide vehicle reduction may produce a change in travel time of a minute or two \u2014 statistically detectable but below the threshold drivers perceive. A pilot that 'works' on the dashboard while feeling like nothing changed will fail politically and will not support permanence. It also invites the cheaper counterfactual: signal retiming, curb/loading management, and dynamic parking pricing targeted at the actual pinch points.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "Current-year probe/INRIX-style speed and delay data showing peak-period delay per vehicle-mile materially above free-flow across the cordon (not just 2-3 intersections), plus a modeled estimate of the minutes-saved-per-trip at 10-20% volume reduction and a stated threshold for what counts as perceptible improvement.",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-003",
+      "target_claim": "CL-003",
+      "title": "In a mid-size cordon, elasticity may express as bypass and spillover rather than mode shift",
+      "argument": "Small downtown cordons lack the natural boundaries (rivers, limited crossings) that make London/Stockholm/NYC cordons hard to evade. Through-trips and edge-destination trips can reroute onto adjacent arterials and residential streets, converting a downtown improvement into a neighborhood degradation with no environmental or mode-shift gain. The claim asserts trips will shift by 'time, mode, route, or cancellation' but treats route diversion as a success mode when it is often a harm.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "A cordon-boundary study identifying through-trip share and bypass route capacity, plus a pre-committed spillover monitoring plan on adjacent corridors with defined thresholds that would trigger boundary redesign or pilot suspension.",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-004",
+      "target_claim": "CL-003",
+      "title": "The toll may be dominated by existing parking prices, making the cordon the wrong instrument",
+      "argument": "In most mid-size downtowns, drivers already face a parking price and the marginal cost of parking often exceeds a $2-$8 entry charge. If so, the cordon adds a small increment to an already-priced decision, and the same behavioral effect could be obtained by raising or dynamically pricing curb and municipal garage rates \u2014 at a fraction of the capital cost, with no gantries, no plate-data regime, and no federal tolling question. The claim never tests the cordon against its cheapest substitute.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "A side-by-side analysis of average out-of-pocket parking cost per downtown trip vs. the proposed toll, and an explicit comparison of projected VMT/delay reduction per dollar for (a) cordon pricing vs. (b) dynamic parking pricing plus curb management. Cordon proceeds only if it shows a materially better ratio or reaches trips parking pricing cannot (through-traffic, employer-paid parking).",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-005",
+      "target_claim": "CL-004",
+      "title": "Transit expansion funded by toll revenue arrives after the trips it must absorb",
+      "argument": "The claim allows for 'funding committed to expand' alternatives, but the typical financing story is that toll revenue funds transit. Revenue accrues monthly while service must be in place on day one; bus procurement and operator hiring run 12-24 months in most agencies. In practice mid-size systems run 30-60 minute headways outside a few corridors, which is not a substitute for a driving trip. Priced-out trips then convert to cancelled downtown trips, which directly attacks CL-007 rather than being absorbed.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "A signed service plan showing the specific added frequency/span in place at least 90 days before toll start, with an identified non-toll funding source, and operator headcount confirmed hired or under contract.",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-006",
+      "target_claim": "CL-006",
+      "title": "A known 18-month sunset systematically biases measured elasticity downward",
+      "argument": "Households and firms will not make the durable adjustments that drive long-run congestion pricing effects \u2014 shedding a car, changing job or residence location, employers renegotiating parking benefits, developers changing plans \u2014 in response to a charge announced as temporary. The pilot therefore measures a short-run elasticity that is reliably smaller than the permanent-policy elasticity. A weak result would be genuinely ambiguous: it cannot distinguish 'pricing doesn't work here' from 'nobody restructured for 18 months.' This risks the pilot killing a policy that would have worked.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "A pre-registered analysis plan that states the expected short-run/long-run elasticity ratio from the literature and defines success thresholds adjusted for it, or a design change to an open-ended program with a scheduled review rather than a hard sunset.",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-007",
+      "target_claim": "CL-006",
+      "title": "Usable observation window is far shorter than 18 months, and the in-city control is contaminated",
+      "argument": "Subtract system commissioning and grace period (1-3 months), the novelty/ramp period the claim itself concedes (3-6 months), and a pre-election or wind-down period at the end, and stable observation may be 8-11 months \u2014 under a full seasonal cycle with no matched prior-year comparison. Worse, the proposed 'control corridor' is presumably in the same metro, where it will absorb diverted traffic and diverted retail spending; a control that moves in the opposite direction because of the treatment inflates the estimated effect. Confounders (gas prices, return-to-office policy shifts, a major downtown development opening) are unaddressed.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "A written evaluation design specifying the exact analysis window, a control that is demonstrably outside the diversion and spending catchment (e.g., a comparable downtown in a peer city, synthetic control), a minimum of 12 months of pre-period baseline data already collected, and a named list of confounders with how each will be adjusted for.",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-008",
+      "target_claim": "CL-006",
+      "title": "No pre-committed decision rule means the evidence will not decide anything",
+      "argument": "The claim asserts the pilot yields 'decision-grade' evidence but no decision rule is stated. Pilots without a pre-registered continue/expand/terminate threshold, and without an identified body bound to apply it, are resolved by whichever coalition is louder at month 18 \u2014 typically the merchants and commuters who feel the cost, not the diffuse beneficiaries. The evidence then becomes an expensive artifact rather than an input.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "A council-adopted resolution before launch specifying the metrics, thresholds, and the decision body/date for continuation, including what result constitutes failure and triggers termination.",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-009",
+      "target_claim": "CL-007",
+      "title": "Exemption creep required to protect business and equity will hollow out the price signal",
+      "argument": "The mitigations named in the claim \u2014 resident exemptions, low-income exemptions, revenue rebates \u2014 plus the ones political negotiation reliably adds (employees of downtown businesses, disabled placards, government vehicles, delivery fleets, patients) can exempt a large share of entering vehicles. Beyond roughly 25-30% exemption coverage the volume reduction target in CL-003 becomes arithmetically unreachable, and the pilot then tests a diluted policy while being reported as a test of congestion pricing. The claim treats mitigation as costless to the mechanism.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "A quantified exemption budget: modeled share of current entering vehicles covered by the proposed exemption set, a hard cap on total exempt share, and demonstration that the volume-reduction target is still achievable at that cap.",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-010",
+      "target_claim": "CL-008",
+      "title": "The empirical premise behind the equity judgment may not hold outside transit-rich cities",
+      "argument": "The 'pricing is fairer than rationing by delay' argument is strong where low-income commuters predominantly ride transit, so tolls fall on higher-income drivers and revenue flows to riders. In a mid-size city the incidence can invert: low-wage service, hospital, and shift workers often drive because transit does not serve their hours or origins, while higher-income downtown office workers have employer-paid parking that blunts the toll's bite entirely. The value judgment may be defensible in principle but rest on a factual pattern that does not describe this city.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "Local income-by-mode data for downtown-destined trips (LEHD/ACS plus intercept survey), including off-peak and night shifts, and an estimate of what share of peak drivers have employer-paid parking. If the toll's incidence is regressive, the rebate/credit design must be shown to reach those drivers at high take-up before launch.",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-011",
+      "target_claim": "CL-005",
+      "title": "Pilot-scale economics are structurally bad and revenue falls if the policy succeeds",
+      "argument": "Detection and back-office capital is largely fixed and does not scale down for an 18-month term, so cost per collected dollar is far worse than for a permanent system. Two specific leaks are unaddressed: out-of-state and out-of-jurisdiction plates, where collection depends on DMV data-sharing agreements the city may not have and where uncollectible rates of 10-20%+ are common early on; and the internal contradiction that revenue sufficiency improves precisely when the traffic reduction goal is missed. Framing the deficit as an 'accepted evaluation expense' is legitimate only if the number is sized and appropriated in advance.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "A vendor-quoted total cost of ownership for an 18-month term (capital, O&M, billing, exemptions administration, evaluation), a modeled net position under both the success case (20% volume reduction) and the failure case, documented reciprocity/DMV lookup agreements for the top out-of-jurisdiction plate sources, and an appropriated line item covering the worst-case deficit.",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-012",
+      "target_claim": "CL-001",
+      "title": "Mid-pilot preemption is a live risk that the pilot itself provokes",
+      "argument": "The claim tests preemption as of today. A visible cordon charge in a mid-size city is a salient target for a state legislature, and several states have enacted preemption specifically in reaction to local pricing or tolling initiatives. A pilot terminated at month 9 by state law produces sunk capital, no evidence, and a poisoned well for a decade \u2014 arguably a worse outcome than not starting.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "A legislative risk assessment naming session dates, bill filings, and sponsor sentiment during the pilot window, plus contract terms that cap the city's exposure (vendor termination-for-convenience clauses, redeployable equipment) if authority is withdrawn mid-pilot.",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-013",
+      "target_claim": "CL-008",
+      "title": "State anti-diversion law may legally forbid the revenue recycling the equity argument depends on",
+      "argument": "The value judgment in CL-008 is not self-standing: it is explicitly conditioned on 'revenue recycled into transit or low-income credits.' In roughly half of US states, constitutional or statutory anti-diversion provisions restrict revenue derived from motor vehicle use (fuel taxes, registration, and in several states tolls and other road user charges) to highway and street purposes. If the cordon charge is characterized as a motor-vehicle-related revenue, transfers to bus operations or income-based cash rebates may be unlawful, and the money would be confined to roadway capital \u2014 the least defensible use politically and the one that most undermines the fairness argument. This also silently breaks CL-004's funding story and CH-005's mitigation. The claim assumes a spending discretion that has not been legally tested.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "A written city attorney or state AG opinion classifying the cordon charge under state revenue law and confirming that transit operating subsidy and direct low-income credits are permissible uses; or, if not, a redesigned revenue plan whose lawful uses still support the public equity case, adopted before launch.",
+      "raised_in_round": 2
+    },
+    {
+      "id": "CH-014",
+      "target_claim": "CL-001",
+      "title": "Authority to charge is not authority to run an ALPR surveillance and penalty regime",
+      "argument": "CL-001 tests tolling authority only. Cordon enforcement requires continuous automated plate capture of every vehicle entering downtown, retention of location-time records on non-liable as well as liable drivers, and an adjudication pathway for contested notices. Several states regulate ALPR retention, sharing, and permissible purpose by statute; others have no framework, which converts the plate database into an open public-records and third-party-subpoena target (including immigration and civil litigation demands). Camera-based enforcement programs in mid-size cities have been struck down or repealed on due-process and authority grounds independent of the underlying policy, and a single injunction mid-pilot destroys the dataset continuity CL-006 needs. The technical enforcement layer is a separate legal dependency that has not been surfaced.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "A legal memo mapping the specific state ALPR/data-privacy and automated-enforcement statutes onto the proposed system, a published data governance policy (retention period, deletion of non-liable records, prohibition on third-party and federal sharing, audit rights), and confirmed statutory authority to issue and adjudicate civil penalties for nonpayment.",
+      "raised_in_round": 2
+    },
+    {
+      "id": "CH-015",
+      "target_claim": "CL-005",
+      "title": "The unmodeled cost is organizational: a mid-size city has no billing, dispute, and customer-service function to run this",
+      "argument": "CL-005 frames the cost question as capital plus O&M versus revenue. The harder constraint is that a cordon charge requires the city to stand up, in months, a consumer-facing billing operation: account creation, multilingual call center, mailed violation notices, dispute intake, hearing officers, hardship waivers, refunds for misread plates, and unbanked payment channels. Mid-size cities typically have none of this at scale. The dominant failure mode of pilots like this is not traffic performance but administrative: wrong bills, unreachable support lines, and penalties landing on people who never got the first notice. That failure is highly visible, generates the exact anecdotes that decide the month-18 vote (see CH-008), and is fatal to the program regardless of whether the traffic results are good. Vendor TCO quotes routinely underprice the municipal side of this.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "A staffing and service-level plan for the back office (FTE count, call-center SLA, dispute turnaround target, misread/appeal rate assumptions benchmarked against comparable ANPR programs), with the positions budgeted and the vendor/city responsibility split contractually assigned, plus a pre-launch end-to-end operational dry run on a shadow-billing period with no charges levied.",
+      "raised_in_round": 2
+    },
+    {
+      "id": "CH-016",
+      "target_claim": "CL-007",
+      "title": "Downtown business impact cannot be measured on the pilot's timeline at the required geography",
+      "argument": "CL-007 asserts effects will be 'neutral to positive' or offsettable, but the evidentiary basis for that finding does not exist at cordon scale. Sales-tax remittance data typically lags two to three quarters, is reported at filer rather than establishment level (chains and franchises report at HQ or aggregated), and is often confidential under state law and unavailable to the city at sub-district geography. Foot-traffic proxies and card-panel data have known coverage bias toward chains and exclude cash and B2B activity. The practical consequence is that at month 18 the city will have no defensible estimate of retail impact, and the vacuum will be filled by merchant survey and anecdote \u2014 which is exactly the channel through which the pilot is likely to be killed. CL-007 is therefore not merely uncertain, it is structurally unfalsifiable as designed.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "A confirmed data access agreement (state revenue department sub-district sales data, or a licensed card-panel/foot-traffic dataset with disclosed coverage rate for downtown establishments), a pre-period baseline of at least 12 months already in hand at that geography, and a pre-registered statistical power calculation showing the minimum retail effect size the design can actually detect.",
+      "raised_in_round": 2
+    },
+    {
+      "id": "CH-017",
+      "target_claim": "CL-007",
+      "title": "Unlike megacity cordons, a mid-size downtown has a near-perfect free-parking substitute, and relocation is irreversible",
+      "argument": "London, Stockholm, and NYC cordons work partly because the priced district has no locational substitute \u2014 firms and shoppers cannot replicate that agglomeration in a suburb. A mid-size US downtown competes directly with suburban office parks and retail centers offering free parking five to fifteen minutes away. The relevant elasticity is therefore not just trip-level (CL-003) but location-level: a marginal tenant renewing a lease, a restaurant group siting its next location, or a medical practice choosing a campus during the pilot window. Those decisions are made on multi-year leases and do not reverse if the pilot is terminated at month 18. This makes the pilot's downside asymmetric in a way CL-007's 'non-fatal during the pilot' framing misses \u2014 the harm can be permanent even if the policy is not.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "An inventory of downtown lease expirations and known relocation decisions falling inside the pilot window, an estimate of the share of downtown floorspace at decision risk, and either a committed offset (occupancy-linked tax abatement, guaranteed toll rebate for employees of downtown tenants) or evidence from comparable cities that pricing did not accelerate suburban tenant migration.",
+      "raised_in_round": 2
+    },
+    {
+      "id": "CH-018",
+      "target_claim": "CL-002",
+      "title": "Latent demand refills freed capacity, so the measured improvement decays over exactly the pilot horizon",
+      "argument": "CL-002 assumes a 10-20% reduction in entering vehicles maps to a durable, detectable speed improvement. In congested networks, suppressed trips (people who currently avoid downtown at peak precisely because of delay) reoccupy freed capacity \u2014 triple convergence. Non-tolled and exempt vehicles are the first to refill, so refill is amplified by whatever exemption set CH-009 describes. The refill process operates over months, meaning the largest measured benefit occurs early in the pilot and erodes across the stable observation window CH-007 identifies. The evaluation may therefore show a strong month-4 effect and a weak month-14 effect, which is the worst possible profile: it invites both sides to cite the data they prefer and undercuts the case for permanence at the moment the decision is made.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "A modeled refill estimate for the specific network (elasticity of latent peak demand with respect to travel time), a pre-registered specification of whether success is judged on the early or steady-state effect, and a commitment to report the time path of the effect rather than a single pooled average.",
+      "raised_in_round": 2
+    },
+    {
+      "id": "CH-019",
+      "target_claim": "CL-004",
+      "title": "Cordon-edge parking displacement creates a residential neighborhood harm that the alternatives plan does not address",
+      "argument": "CL-004 lists park-and-ride as an absorber but assumes formal capacity exists at the right edges. In practice the cheapest evasion is not transit but 'hide-and-ride': parking free on the residential streets just outside the cordon and walking or scootering the last three to eight blocks. Mid-size downtowns are typically ringed by low-density residential blocks with unmetered curb, so the displaced parking demand lands on households with no permit program to protect them. This is a distinct harm from traffic bypass \u2014 it degrades the neighborhoods that are usually the pilot's natural political constituency, and it recruits organized opposition from residents who receive no benefit from the cordon. Retrofitting residential permit parking after complaints start typically takes 6-12 months of petition and hearing process, i.e. most of the pilot.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "A pre-pilot occupancy survey of curb parking in the 3-6 block ring outside the proposed cordon, formal park-and-ride capacity quantified against the projected diverted trip volume, and residential permit parking districts (or equivalent time-limit enforcement) adopted and enforceable in the ring before toll start, not after.",
+      "raised_in_round": 2
+    },
+    {
+      "id": "CH-020",
+      "target_claim": "CL-003",
+      "title": "A pilot with a legislatively fixed rate tests one point on the demand curve and cannot converge on the target",
+      "argument": "CL-003 asserts a $2-$8 charge will produce the targeted reduction, but congestion pricing is a performance-targeting instrument, not a fixed-fee tax: London raised its charge twice, Stockholm and Singapore run scheduled rate revisions, and Singapore's system exists precisely because the correct price is discovered iteratively. In a US municipal setting the rate will almost certainly be set by ordinance or by a state enabling act with a statutory cap, with rate changes requiring council action, public hearing, possibly a rate ceiling, and in some frameworks a new federal or state approval. If the launch rate under-shoots (highly likely given exemption dilution per CH-009 and refill per CH-018), the city faces a choice between running 18 months at a price it knows is too low - producing the ambiguous weak result CH-006 warns about - or opening a mid-pilot rate fight that resets the novelty period and destroys the analysis window in CH-007. The claim treats the price as an input to be assumed rather than a control variable that must be adjustable within the pilot.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "Confirmation that the enabling instrument permits administrative rate adjustment within a pre-authorized band without new legislative or federal approval, plus a pre-published rate schedule or performance-linked adjustment rule (e.g., quarterly review against a volume target) adopted before launch, with the schedule communicated to the public at launch so that adjustments are not experienced as bad faith.",
+      "raised_in_round": 3
+    },
+    {
+      "id": "CH-021",
+      "target_claim": "CL-002",
+      "title": "The congesting fleet may be dominated by vehicle classes that are structurally inelastic to a per-entry charge",
+      "argument": "CL-002 reasons in aggregate entering vehicles, but downtown delay in mid-size US cities is disproportionately produced by specific classes: freight and parcel delivery (now several times pre-2015 volume, double-parking in travel lanes), TNC pick-up/drop-off and deadheading circulation, and government/institutional fleets. None of these respond meaningfully to $2-$8. Delivery firms pass the charge through in fractions of a cent per package and will not change routing; TNC drivers face it as a cost of doing business, and in most designs the platform passes it to the rider as a small surcharge on an already-variable fare; institutional fleets are typically exempted outright. If, say, 25-40% of peak entries and a larger share of the actual lane-blocking events come from these classes, the price signal is being applied almost entirely to the private commuter - the one class already partially priced by parking (CH-004) and the one most able to relocate (CH-017). The instrument is then mismatched to the mechanism producing the delay, and the cheaper high-yield intervention is loading-zone pricing, delivery windows, and TNC curb zones.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "A vehicle-classification count and curb-event study for the cordon at peak (share of entries and share of observed blockage events by commuter / freight / TNC / fleet / other), with a modeled estimate of the entry-charge elasticity for each class, demonstrating that the classes actually responsive to the toll account for enough of the delay to hit the CL-002 improvement target.",
+      "raised_in_round": 3
+    },
+    {
+      "id": "CH-022",
+      "target_claim": "CL-005",
+      "title": "Procurement lead time and a thin vendor market for an 18-month term are unpriced and unscheduled",
+      "argument": "CL-005 compares cost to revenue but presumes the system can be bought. There is no commodity market for small-cordon enforcement in the US: the vendor set is a handful of tolling integrators whose products and pricing are built for interstate-scale, multi-year concessions. A competitive solicitation for a mid-size cordon with an 18-month term is an unattractive bid: fixed engineering and integration cost with no amortization runway, high political termination risk (CH-012), and a bespoke exemption and back-office scope (CH-015). The predictable outcomes are few or no responsive bids, priced-for-risk quotes far above planning estimates, or a sole-source award that draws a bid protest. Layer on typical municipal procurement timelines - RFI, RFP drafting, 60-90 day response, evaluation, council award, contract negotiation, then 6-12 months of design, install, and integration - and the acquisition path alone can exceed the pilot length. This is a schedule and cost dependency the claim never surfaces, and it compounds with the federal review timeline in CH-001 rather than running in parallel with it.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "A completed RFI or market-sounding with at least two vendors confirming willingness to bid an 18-month term and providing budgetary pricing, plus an integrated procurement-to-go-live schedule with council award and installation milestones that fits inside the authorized window, and a written option for equipment lease or redeployment rather than purchase.",
+      "raised_in_round": 3
+    },
+    {
+      "id": "CH-023",
+      "target_claim": "CL-006",
+      "title": "No council can bind its successor, and the decision body at month 18 is unlikely to be the one that adopted the rule",
+      "argument": "CH-008 correctly demands a pre-committed decision rule, but a council resolution is not self-enforcing and cannot bind a future legislative body. An 18-month pilot plus 6-12 months of pre-launch work spans at least one municipal election cycle and often a mayoral transition; new members are not bound by prior thresholds and can repeal the enabling ordinance by simple majority at any point. Worse, congestion pricing is a high-salience wedge issue that candidates will run against, so the pilot itself selects for a successor body predisposed to terminate it. This means the evaluation design in CL-006 is answering a question the decision-maker at month 18 may not be asking, and the 'decision-grade evidence' framing overstates what evidence can accomplish against a changed political principal. It also interacts with CH-006: an early termination vote at month 10 delivers neither long-run elasticity nor a clean short-run estimate.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "An election calendar mapped against the pilot timeline; a governance structure that places the continuation decision with a body less exposed to turnover (e.g., a transportation authority board, a joint city-transit-agency agreement, or a grant condition requiring completion); and a stated minimum-data clause or contractual/funder commitment that makes early termination costly, plus an explicit assessment of whether the current council majority survives the intervening election.",
+      "raised_in_round": 3
+    },
+    {
+      "id": "CH-024",
+      "target_claim": "CL-006",
+      "title": "The air-quality outcome is almost certainly below detection limits and will read as a null result",
+      "argument": "CL-006 lists air quality as one of four evidence streams. A 10-20% reduction in entering vehicles across a small cordon changes local emissions by a small fraction, and ambient concentrations at that scale are dominated by regional background, meteorology, and season - which vary by far more than the treatment effect. Regulatory monitors are sited for regional representativeness, are typically one or two per metro, and are not positioned to detect a cordon-scale signal; even Stockholm and London required dedicated modeling and multi-year series to resolve health effects. Committing to air quality as a headline metric therefore creates a near-guaranteed 'no significant change' finding that opponents will report as proof the policy delivered nothing environmental, while the actual defensible environmental claim (modeled VMT and emissions reduction) is a calculation rather than a measurement and will be dismissed as such. This is a self-inflicted evidentiary wound distinct from the retail measurement problem in CH-016.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "A power calculation for the proposed monitoring configuration showing the minimum detectable concentration change against seasonal and meteorological variance; either a dedicated near-road sensor network with pre-period data sufficient to detect the expected effect, or a decision to drop ambient concentration as a success metric and replace it with pre-registered modeled VMT/emissions estimates, stated as such publicly before launch.",
+      "raised_in_round": 3
+    },
+    {
+      "id": "CH-025",
+      "target_claim": "CL-004",
+      "title": "The trips most deterred by a flat entry charge are exactly the ones alternatives serve worst",
+      "argument": "CL-004 reasons as if diverted trips are commuters who can take a bus. But a flat per-entry charge is regressive against trip value: it is a small share of a full workday's cost and a large share of a short discretionary trip. The commuter with employer-paid parking (CH-010) barely notices; the person considering a $30 dinner, an evening event, a quick errand, or a Saturday visit sees a 10-25% price increase on the outing. Those are precisely the trips that transit serves worst in a mid-size city - evening and weekend headways, no service after 9pm, multi-stop chains, passengers carrying goods or children. So the deterred trips are systematically the discretionary downtown-economy trips, not the peak commute the policy targets, which means the volume reduction may be real while the congestion reduction is not, and the loss lands directly on CL-007's retail and restaurant base. The claim's list of absorbers is drawn for a peak commute profile that does not match the incidence of a flat charge.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "A trip-purpose breakdown of current cordon entries by time of day with estimated value-of-time and price sensitivity per purpose, plus either a charging design that concentrates the price on peak commute periods (peak-only or steeply time-varying rates, off-peak free) or a demonstrated evening/weekend transit and micromobility service level adequate for the deterred trip types.",
+      "raised_in_round": 3
+    },
+    {
+      "id": "CH-026",
+      "target_claim": "CL-001",
+      "title": "Title VI and ADA compliance are independent legal dependencies and a separate litigation vector",
+      "argument": "CL-001 scopes legal authority to tolling power and preemption. Any federally assisted transportation program carries independent Title VI and environmental-justice obligations: a documented disparate-impact analysis, a meaningful public participation plan with language access, and, where disparate impact is found, a demonstration of substantial legitimate justification and consideration of less-discriminatory alternatives. In a city where the incidence pattern may be regressive (CH-010), a Title VI finding is a live possibility, and it is enforceable through administrative complaint to USDOT independent of any state-law question - an avenue that costs a complainant nothing and can suspend or condition the program mid-pilot. ADA raises a parallel issue: paratransit and disability-related trips, and the adequacy of any placard exemption's administration. These are compliance work products with their own months-long timelines and their own veto points, and they are not covered by either the tolling-authority analysis in CL-001 or the fairness judgment in CL-008.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "A completed Title VI/EJ analysis for the cordon with the underlying incidence data, a language-access and public-participation plan meeting USDOT guidance, an ADA accommodation policy for disability-related trips with an administrable verification process, and a legal memo assessing administrative-complaint exposure and the city's substantial-legitimate-justification argument, all in hand before launch.",
+      "raised_in_round": 3
+    }
+  ],
+  "review_rounds": [
+    {
+      "round": 1,
+      "new_challenges": 12,
+      "new_material_or_blocking": 12,
+      "completed_at": "2026-09-05T19:58:45.442210+00:00"
+    },
+    {
+      "round": 2,
+      "new_challenges": 7,
+      "new_material_or_blocking": 7,
+      "completed_at": "2026-09-05T20:00:13.068529+00:00"
+    },
+    {
+      "round": 3,
+      "new_challenges": 7,
+      "new_material_or_blocking": 7,
+      "completed_at": "2026-09-05T20:02:08.383375+00:00"
+    }
+  ],
+  "review_policy": {
+    "max_rounds": 3,
+    "stop_on_no_new_material": true
+  },
+  "termination": {
+    "reason": "Maximum review rounds reached (3).",
+    "round": 3,
+    "closed_at": "2026-09-05T20:02:08.383375+00:00"
+  },
+  "commitment": {
+    "action": "WAIT",
+    "matched_rule": "UNRESOLVED_BLOCKING",
+    "triggering_challenges": [
+      "CH-001",
+      "CH-002",
+      "CH-003",
+      "CH-004",
+      "CH-005",
+      "CH-007",
+      "CH-008",
+      "CH-013",
+      "CH-014",
+      "CH-015",
+      "CH-020",
+      "CH-021",
+      "CH-022"
+    ],
+    "reasons": [
+      "Blocking unresolved challenge: Federal-aid highway free-use rule and NEPA can gate the pilot regardless of state authority",
+      "Blocking unresolved challenge: Post-2020 downtown demand may have already removed the congestion the pilot is priced to fix",
+      "Blocking unresolved challenge: In a mid-size cordon, elasticity may express as bypass and spillover rather than mode shift",
+      "Blocking unresolved challenge: The toll may be dominated by existing parking prices, making the cordon the wrong instrument",
+      "Blocking unresolved challenge: Transit expansion funded by toll revenue arrives after the trips it must absorb",
+      "Blocking unresolved challenge: Usable observation window is far shorter than 18 months, and the in-city control is contaminated",
+      "Blocking unresolved challenge: No pre-committed decision rule means the evidence will not decide anything",
+      "Blocking unresolved challenge: State anti-diversion law may legally forbid the revenue recycling the equity argument depends on",
+      "Blocking unresolved challenge: Authority to charge is not authority to run an ALPR surveillance and penalty regime",
+      "Blocking unresolved challenge: The unmodeled cost is organizational: a mid-size city has no billing, dispute, and customer-service function to run this",
+      "Blocking unresolved challenge: A pilot with a legislatively fixed rate tests one point on the demand curve and cannot converge on the target",
+      "Blocking unresolved challenge: The congesting fleet may be dominated by vehicle classes that are structurally inelastic to a per-entry charge",
+      "Blocking unresolved challenge: Procurement lead time and a thin vendor market for an 18-month term are unpriced and unscheduled"
+    ],
+    "accepted_risks": [],
+    "committed_at": "2026-09-05T20:02:08.383375+00:00",
+    "gate": "deterministic-v1",
+    "if_triggers_resolved": {
+      "action": "ACT",
+      "matched_rule": "NO_UNRESOLVED_FATAL_OR_BLOCKING",
+      "triggering_challenges": [],
+      "accepted_risks": [
+        "A known 18-month sunset systematically biases measured elasticity downward",
+        "Exemption creep required to protect business and equity will hollow out the price signal",
+        "The empirical premise behind the equity judgment may not hold outside transit-rich cities",
+        "Pilot-scale economics are structurally bad and revenue falls if the policy succeeds",
+        "Mid-pilot preemption is a live risk that the pilot itself provokes",
+        "Downtown business impact cannot be measured on the pilot's timeline at the required geography",
+        "Unlike megacity cordons, a mid-size downtown has a near-perfect free-parking substitute, and relocation is irreversible",
+        "Latent demand refills freed capacity, so the measured improvement decays over exactly the pilot horizon",
+        "Cordon-edge parking displacement creates a residential neighborhood harm that the alternatives plan does not address",
+        "No council can bind its successor, and the decision body at month 18 is unlikely to be the one that adopted the rule",
+        "The air-quality outcome is almost certainly below detection limits and will read as a null result",
+        "The trips most deterred by a flat entry charge are exactly the ones alternatives serve worst",
+        "Title VI and ADA compliance are independent legal dependencies and a separate litigation vector"
+      ]
+    }
+  }
+}

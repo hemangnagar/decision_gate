@@ -1,0 +1,364 @@
+{
+  "id": "DG-20260905193421",
+  "decision": "Should a data team migrate its nightly Spark batch jobs (2 TB/day) to DuckDB on a single large machine?",
+  "context": "",
+  "created_at": "2026-09-05T19:34:21.585386+00:00",
+  "claims": [
+    {
+      "id": "CL-001",
+      "title": "Per-job working set fits a single machine",
+      "statement": "No individual nightly job requires more than the largest available single-node memory+local-NVMe spill budget (e.g., peak shuffle/join/aggregation state under ~2\u20134 TB), even though 2 TB/day is ingested in total.",
+      "kind": "ASSUMPTION",
+      "depends_on": []
+    },
+    {
+      "id": "CL-002",
+      "title": "Single-node I/O throughput meets the batch window",
+      "statement": "A single machine can read 2 TB/day from the source store (object storage or local disk) and complete all nightly jobs within the existing SLA window, measured on a representative replay of one night's workload.",
+      "kind": "FACT",
+      "depends_on": []
+    },
+    {
+      "id": "CL-003",
+      "title": "Workload is expressible in DuckDB SQL",
+      "statement": "All current Spark logic \u2014 including UDFs, ML steps, streaming-ish incremental logic, and Scala/Python DataFrame code \u2014 can be rewritten as DuckDB SQL or supported extensions without unsupported feature gaps.",
+      "kind": "DEPENDENCY",
+      "depends_on": []
+    },
+    {
+      "id": "CL-004",
+      "title": "Loss of distributed fault tolerance is acceptable",
+      "statement": "The team can tolerate whole-job restarts on node failure (no task-level retry or speculative execution) because a full rerun still fits inside the nightly window and node failure rates are low.",
+      "kind": "ASSUMPTION",
+      "depends_on": []
+    },
+    {
+      "id": "CL-005",
+      "title": "Data growth stays within single-node headroom",
+      "statement": "Projected data volume and job complexity over the next 24\u201336 months remain within the scaling ceiling of a single machine, or a re-migration path back to a distributed engine is cheap enough to accept.",
+      "kind": "ASSUMPTION",
+      "depends_on": []
+    },
+    {
+      "id": "CL-006",
+      "title": "Total cost drops materially",
+      "statement": "Annual cost of one large always-on or scheduled instance plus migration engineering is measurably lower than current Spark cluster cost (compute, EMR/Databricks fees, and ops time).",
+      "kind": "FACT",
+      "depends_on": []
+    },
+    {
+      "id": "CL-007",
+      "title": "Migration cost is bounded and recoverable",
+      "statement": "Rewriting and validating the pipelines takes a known, budgeted engineering effort with an output-parity test (row/aggregate diffing against Spark results) that can be run before cutover.",
+      "kind": "DEPENDENCY",
+      "depends_on": []
+    },
+    {
+      "id": "CL-008",
+      "title": "Operational simplicity is worth more than elasticity",
+      "statement": "The team judges reduced operational surface (no cluster tuning, no JVM/shuffle debugging, faster local iteration) to be more valuable than the elasticity and horizontal headroom Spark provides.",
+      "kind": "VALUE_JUDGMENT",
+      "depends_on": []
+    }
+  ],
+  "challenges": [
+    {
+      "id": "CH-001",
+      "target_claim": "CL-001",
+      "title": "Per-job peak is not the binding constraint; concurrency and spill cliffs are",
+      "argument": "The claim scopes the working set to a single job in isolation, but nightly pipelines usually run several jobs concurrently (or a DAG with overlapping stages) on the same node, all drawing from one shared memory pool. DuckDB enforces a global memory_limit per process; two 800 GB-state jobs that each 'fit' will contend and either serialize (blowing the window) or spill. Separately, DuckDB's out-of-core paths are not uniformly graceful: high-cardinality GROUP BY, COUNT(DISTINCT), full-dataset window functions with wide partitions, and skewed hash joins can degrade non-linearly once spill begins, or hit hard OOM rather than degrade. A 'fits under 2-4 TB' estimate derived from Spark's shuffle metrics does not translate: Spark's per-partition state is tiny by construction, so Spark stats systematically understate what a single-node engine must materialize.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "Replay the top 5 heaviest jobs (by Spark shuffle write and peak executor memory) on the candidate instance at the actual nightly concurrency, with memory_limit set to the real budget, and record peak RSS, spill volume, and wall time versus an in-memory run. Requires no OOM and <2x slowdown from spill on the worst job.",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-002",
+      "target_claim": "CL-002",
+      "title": "2 TB/day ingest understates actual bytes moved; single NIC is the ceiling",
+      "argument": "The 2 TB figure is logical daily volume, not bytes read. Multi-pass algorithms, joins that scan a dimension repeatedly, jobs that re-read the same source tables, backfills, and any failed-and-retried run multiply effective reads by 3-10x. Against S3, a single node is capped by its NIC and realistic sustained object-storage throughput (roughly 2-6 GB/s even on a 100 Gbps instance), so 10-20 TB of effective reads is 1-3 hours of pure I/O before any compute. A Spark cluster aggregates NICs across executors and simply does not have this ceiling. The claim is labeled FACT but the stated evidence ('measured on a representative replay') reads as a plan, not a completed measurement.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "Produce the actual replay result: total bytes read from the source store during one full nightly run (from S3/GCS request metrics, not logical table size), sustained throughput achieved on the candidate instance with cold caches, and end-to-end wall clock versus SLA \u2014 including at least one deliberately induced retry.",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-003",
+      "target_claim": "CL-003",
+      "title": "UDFs and ML steps are the likely hard stop, not SQL dialect",
+      "argument": "Dialect translation is the easy part. The real gaps are: (a) Python UDFs in DuckDB break vectorized execution and can be orders of magnitude slower than the equivalent Spark Pandas UDF running in parallel across executors \u2014 a UDF over a billion-row table may be functionally expressible but operationally impossible; (b) Spark MLlib has no DuckDB equivalent, so any training/scoring step must move to a separate stack (sklearn/XGBoost in-process), which changes model artifacts and requires its own validation; (c) 'streaming-ish incremental logic' implies checkpointed state or watermarking, which DuckDB has no primitive for and must be hand-rolled; (d) Delta/Iceberg *write* support and transactional table maintenance (compaction, vacuum, schema evolution) are markedly weaker than Spark's. Any one of these being non-negotiable turns a bounded migration into an open-ended one.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "Inventory every non-SQL construct across all pipelines (UDF/UDAF count and rows processed, MLlib calls, stateful/incremental jobs, table-format writes) and classify each as: pure-SQL translatable, needs extension, needs a new component, or unsupported. Then prototype the single hardest one end-to-end and benchmark it.",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-004",
+      "target_claim": "CL-004",
+      "title": "Rerun-fits-in-window and I/O-fits-in-window cannot both be comfortably true",
+      "argument": "For a whole-job restart to be absorbable, the pipeline must complete in under half the window \u2014 otherwise a single failure blows the SLA. That is a much stronger requirement than CL-002's 'completes within the window' and directly consumes the headroom that CL-002 needs. Additionally, node failure is not the dominant failure mode here: OOM is, and OOM on a single node is correlated with the heaviest night (month-end, backfill), i.e. exactly when there is least slack for a rerun. The single node is also a hard SPOF for cloud maintenance events, and the very large memory instance types (2-4 TB RAM) have thinner capacity pools \u2014 a replacement may not be immediately available in-AZ, and spot is effectively off the table.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "Show measured end-to-end runtime <50% of the SLA window on the worst historical night, plus a documented failover plan (warm standby instance or committed capacity reservation) with a tested time-to-recover, and DuckDB's per-job OOM behavior confirmed to be a clean fail rather than a hang.",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-005",
+      "target_claim": "CL-005",
+      "title": "The rewrite is one-way; 'cheap re-migration' is the weakest link in the argument",
+      "argument": "The escape hatch in this claim does most of the work and is likely false. Spark SQL and DuckDB SQL diverge enough (functions, type coercion, window semantics, extension-specific syntax) that going back means a second full rewrite plus a second parity-validation cycle \u2014 i.e. the migration cost paid twice, at a moment when the team is already past the ceiling and under pressure. Meanwhile the headroom is small: the largest generally available instances offer maybe 2-4x the current node, so at even 30%/year data growth plus new pipelines, the ceiling arrives inside the stated 24-36 month horizon. The safer framing is that this is a one-way door unless the SQL is deliberately kept portable.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "Model data volume and job-count growth against the largest instance available in-region to find the projected ceiling date; if inside 36 months, either commit to writing portable ANSI SQL with a compatibility test suite against a second engine, or estimate the reverse-migration cost explicitly and accept it in the business case.",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-006",
+      "target_claim": "CL-006",
+      "title": "Wrong baseline: compares optimized DuckDB against un-optimized Spark",
+      "argument": "The cost comparison almost certainly benchmarks a new, carefully sized single node against the *current* Spark cluster as it exists today \u2014 which typically carries significant slack: oversized always-on clusters, on-demand instead of spot, unnecessary Databricks/EMR SKU tiers, un-tuned partition counts, no autoscaling. Much of the claimed saving may be available for a few weeks of tuning with zero migration risk and zero feature loss. If right-sizing the existing cluster captures 50-70% of the projected saving, the residual saving may not justify a multi-quarter rewrite. The comparison should be DuckDB versus a *cost-optimized* Spark, not versus the status quo.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "Cost out three options over 3 years: (a) status quo, (b) Spark cost-optimized only (spot/autoscale/right-size/SKU review, estimated from a 2-4 week tuning spike), (c) DuckDB migration including fully loaded engineering cost and dual-running period. Proceed only if (c) beats (b) by a margin that survives a 50% migration-cost overrun.",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-007",
+      "target_claim": "CL-006",
+      "title": "Always-on large instance may erase the saving that transient Spark already captures",
+      "argument": "A nightly batch workload occupies a small fraction of the day. Spark clusters for this pattern are commonly ephemeral \u2014 spun up for the run, torn down after \u2014 and can use spot instances at 60-90% discount. A single very large instance (high-memory, 2-4 TB RAM) is expensive per hour, is a poor spot candidate because interruption means a full rerun (CL-004), and if kept always-on for interactive/ad-hoc use is paying 24 hours for ~4 hours of work. The unit-economics advantage of DuckDB is real for small-to-mid workloads but narrows sharply at the instance sizes CL-001 requires.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "Price the specific candidate instance type under the intended runtime pattern (always-on vs. scheduled start/stop) at on-demand and reserved rates, and compare against the current cluster's actual billed hours rather than its provisioned capacity.",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-008",
+      "target_claim": "CL-007",
+      "title": "Parity diffing will produce ambiguous diffs that are expensive to adjudicate",
+      "argument": "Row/aggregate diffing sounds decisive but in practice surfaces a long tail of engine-semantics differences that are neither bugs nor acceptable-by-inspection: floating-point vs. decimal accumulation order in SUM/AVG, NULL handling in aggregates and joins, timestamp/timezone and DST resolution, string collation and case-folding in ORDER BY and GROUP BY keys, integer division and overflow behavior, and non-deterministic sources (current_timestamp, sampling, unordered LIMIT, arbitrary tie-breaks). Each diff requires human adjudication with a domain owner, and this adjudication cost is usually excluded from the 'known, budgeted effort'. Pipelines with stateful or incremental logic cannot be diffed at all without first freezing inputs and state, which is additional harness work.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "Run the parity harness on 2-3 representative pipelines *before* budgeting the rest. Count diffs, categorize them, and measure hours-to-adjudicate per diff; extrapolate to the full pipeline inventory and add that to the migration estimate. Also define in advance the tolerance policy for float/decimal differences.",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-009",
+      "target_claim": "CL-008",
+      "title": "Operational surface is relocated, not removed",
+      "argument": "The trade is framed as ops-complexity versus elasticity, but much of the eliminated complexity reappears in a different form and is newly owned by this team: memory_limit and thread tuning per job (replacing executor tuning), hand-rolled orchestration/retry/backoff logic (replacing Spark's task retry), single-node capacity planning and instance-family migrations, DuckDB storage-format and version-upgrade management, and thinner integration with the surrounding platform (lineage, catalog, table-format maintenance, observability tooling built around Spark). There is also a hiring/bus-factor dimension: the pool of engineers who can debug a large DuckDB pipeline is far smaller than the Spark pool, and Spark expertise on the team becomes stranded. The judgment may still be right, but it should be made against the true post-migration ops surface, not against zero.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "Write the post-migration runbook before deciding: who is paged, how retries and partial failures are handled, how capacity is scaled, how upgrades are tested, how lineage/catalog integration is preserved. Compare that document honestly against the current Spark runbook.",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-010",
+      "target_claim": "CL-008",
+      "title": "Binary framing ignores the hybrid, which likely dominates both options",
+      "argument": "The decision is posed as all-or-nothing, but nightly workloads are typically Pareto-distributed: 80% of jobs are small enough that DuckDB is trivially better, while a handful of large joins/aggregations are exactly the ones that stress CL-001 and CL-002. Migrating the tail-light majority captures most of the cost and iteration-speed benefit at a fraction of the migration cost and none of the ceiling/fault-tolerance risk, while leaving the few genuinely large jobs on a much smaller Spark cluster. This also de-risks CL-005, since the distributed escape hatch is never fully dismantled. The full migration should have to beat the hybrid, not just the status quo.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "Rank all nightly jobs by input bytes and peak shuffle state; identify the cutoff below which DuckDB is clearly safe. If >70% of jobs fall below it and they account for a meaningful share of cluster cost, evaluate the hybrid as a distinct option in the cost model alongside full migration.",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-011",
+      "target_claim": "CL-007",
+      "title": "The migration target is moving: pipelines keep changing during a multi-quarter rewrite",
+      "argument": "The claim treats the rewrite as a fixed scope against a frozen Spark codebase. In practice nightly pipelines are under active development \u2014 new columns, new sources, changed business rules, upstream schema evolution. During the rewrite window every change must be implemented twice (Spark for production, DuckDB for the in-flight port), or the DuckDB branch continuously falls behind and the parity baseline drifts, invalidating already-passed validations. This dual-maintenance tax is proportional to change velocity times migration duration and is almost never in the 'known, budgeted effort'. It also creates a political failure mode: product stakeholders see feature delivery slow with no visible benefit, and the migration gets suspended half-done, leaving two engines to maintain permanently \u2014 the worst outcome of all.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "Measure change velocity on the pipeline repo over the last 6-12 months (commits/PRs touching pipeline logic, schema changes per quarter). Multiply by projected migration duration to estimate dual-maintenance overhead, and either (a) negotiate an explicit change freeze on migrated pipelines, or (b) add the overhead to the budget and define a kill/rollback criterion if the migration slips past a stated date.",
+      "raised_in_round": 2
+    },
+    {
+      "id": "CH-012",
+      "target_claim": "CL-007",
+      "title": "Parity diffing is a one-shot oracle that disappears at cutover",
+      "argument": "The claim positions the parity test as the risk control, but it only works while Spark is still running and producing reference output. After cutover \u2014 when Spark is decommissioned to realize the savings in CL-006 \u2014 there is no oracle left. Correctness regressions introduced afterwards by DuckDB version upgrades (which change optimizer plans, storage format, and occasionally aggregate/window semantics), by shifts in data distribution that trigger different spill or join paths, or by new pipeline changes, will surface only as wrong numbers noticed downstream weeks later. Spark's ecosystem maturity means such classes of bug are largely already found; DuckDB's larger-than-memory execution paths at multi-TB scale are the least battle-tested part of the engine, and there is no vendor support contract or escalation path. A pre-cutover parity pass provides no ongoing safety net.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "Define the post-cutover correctness regime: how long Spark is kept warm for shadow comparison (and who pays for it), what invariant/reconciliation checks run nightly in its absence, and a written policy for validating DuckDB version upgrades (pinned versions, staged upgrade with re-run of the parity harness on retained golden inputs) before they reach production.",
+      "raised_in_round": 2
+    },
+    {
+      "id": "CH-013",
+      "target_claim": "CL-006",
+      "title": "Savings may be contractually unrealizable for 1-3 years",
+      "argument": "The claim assumes Spark spend is variable and disappears when the workload leaves. In most organizations of this size it is not: Databricks commit contracts, AWS EDP/committed-use discounts, and reserved instances lock in minimum spend over 1-3 year terms. Migrating off Spark then produces zero cash saving until the commitment expires \u2014 while migration engineering cost is paid immediately. Worse, if other teams share the same commit or volume-discount tier, reducing this team's consumption can raise everyone else's effective rate, making the org-level saving negative in year one. This turns a claimed 'measurably lower' cost into a deferred and possibly cross-subsidized one, which changes the NPV and the timing of the decision.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "Obtain from finance/procurement the current commitment terms: remaining commit value, expiry dates, whether unused commit is forfeited, and whether this team's usage affects a shared discount tier. Re-run the 3-year cost model with savings starting only at commit expiry, and confirm the decision still holds (or defer cutover to align with contract renewal).",
+      "raised_in_round": 2
+    },
+    {
+      "id": "CH-014",
+      "target_claim": "CL-005",
+      "title": "Headroom must cover burst reprocessing, not just steady-state nightly volume",
+      "argument": "The claim sizes the ceiling against projected steady-state growth, but the binding capacity event for batch platforms is usually a mass reprocess: a logic bug, a schema correction, a regulatory restatement, or a late-arriving upstream correction requiring replay of 3-12 months of history. On Spark this is absorbed by temporarily scaling out 10-20x and finishing in hours. On a single node there is no scale-out dimension at all \u2014 a 6-month replay that Spark handles in one afternoon becomes weeks of consecutive nightly runs, during which the pipeline is either offline or racing its own SLA. This is not a slow-growth ceiling that arrives in month 30; it is a cliff that can arrive on any given Tuesday and has no mitigation short of the reverse migration CH-005 already flags as expensive.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "Count historical backfill/reprocessing events over the last 24 months, their data span and Spark wall-clock (with the scale-out used). Estimate the equivalent single-node duration and confirm it is tolerable, or define a standing mitigation (retained minimal Spark cluster or documented burst path) and price it into CL-006.",
+      "raised_in_round": 2
+    },
+    {
+      "id": "CH-015",
+      "target_claim": "CL-008",
+      "title": "The value judgment is made by the party that captures the benefit but not the risk",
+      "argument": "CL-008 explicitly grants the decision to 'the team', but the benefits cited \u2014 no cluster tuning, no JVM debugging, faster local iteration \u2014 accrue to the data engineers, while the costs of the failure modes raised elsewhere (missed SLA on a heavy night, a rerun that overruns the window, silent numeric divergence after cutover, a reprocessing event that takes weeks) are borne by downstream consumers: analysts, finance close, ML training, external SLAs. A value judgment weighing developer ergonomics against operational headroom is legitimate, but only if the parties who absorb the downside have priced it and accepted it. As stated, this is an unsigned risk transfer, and it is the claim most likely to be revisited acrimoniously after the first incident.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "Present the concrete downside scenarios (SLA miss probability, worst-case rerun time, reprocessing duration, correctness-regression exposure) to the primary downstream consumers and obtain explicit written acceptance, or an agreed SLA renegotiation. If consumers will not accept the degraded worst case, the hybrid option in CH-010 becomes the default.",
+      "raised_in_round": 2
+    },
+    {
+      "id": "CH-016",
+      "target_claim": "CL-001",
+      "title": "The 'local-NVMe spill budget' may not exist on the instance types that have the RAM",
+      "argument": "CL-001 bundles memory and local NVMe into one 2-4 TB budget, but on real cloud SKUs these do not co-vary. High-memory instance families (u-series, x2/x8 families, GCP m-series) are frequently either NVMe-poor or pair 2-4 TB of RAM with local storage that is much smaller than the spill volume a multi-TB join or high-cardinality GROUP BY would need. Falling back to network-attached storage (EBS/PD) for DuckDB's temp directory changes the physics: single-volume throughput and IOPS ceilings (often ~1-4 GB/s and gp3 baseline IOPS), burst-credit exhaustion mid-run, and latency an order of magnitude worse than NVMe. DuckDB's temp_directory is a single path, so exploiting multiple NVMe devices requires striped RAID configured and maintained by the team, and local NVMe is ephemeral \u2014 it does not survive a stop/start, which interacts badly with the scheduled start/stop cost model in CH-007. A spill plan that assumes 'NVMe' without naming the SKU and measuring its sustained write throughput under DuckDB's spill pattern is unvalidated.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "Name the exact candidate instance SKU available in-region with quota, and document: RAM, local NVMe capacity and sustained sequential+random write throughput (measured, not spec sheet), whether RAID striping is required, and what happens to the temp directory across stop/start. Then run the heaviest job with memory_limit set below its working set and confirm spill throughput does not become the dominant term in wall clock.",
+      "raised_in_round": 3
+    },
+    {
+      "id": "CH-017",
+      "target_claim": "CL-002",
+      "title": "Single-node compute does not scale linearly with core count; the SLA math assumes it does",
+      "argument": "Meeting the window on one machine implicitly requires that the node's aggregate CPU replaces the cluster's aggregate CPU. But intra-query parallelism on very large single nodes degrades: DuckDB's speedup flattens well before 64-192 threads for many operators (hash aggregation with high-cardinality keys, sorts, window functions, Parquet decode contention), and multi-socket 2-4 TB machines are NUMA \u2014 remote-memory access on hash tables that exceed one socket's local DRAM can cost 1.5-2x versus the benchmark numbers usually cited from single-socket laptops and mid-size servers. Spark sidesteps this by running many independent JVM processes each with a small local working set. Additionally, a single DuckDB process running one query at a time saturates all cores on that query's critical path but leaves cores idle during serial phases (planning, final merge, single-threaded writes), whereas a cluster overlaps unrelated jobs. Extrapolating 'Spark cluster used N vCPU-hours, so an N-core node fits' is therefore optimistic by an unmeasured factor.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "Benchmark the two or three heaviest jobs on the candidate instance at 8, 32, 64 and full thread counts and plot the scaling curve; confirm the achieved speedup at full threads is within the margin assumed by the SLA calculation. Report NUMA topology and whether interleaving/pinning was needed.",
+      "raised_in_round": 3
+    },
+    {
+      "id": "CH-018",
+      "target_claim": "CL-002",
+      "title": "No adaptive execution: a single bad plan on a skewed night blows the window with no recovery",
+      "argument": "Spark's AQE re-optimizes at runtime \u2014 it coalesces partitions, converts sort-merge joins to broadcast joins on actual observed sizes, and splits skewed partitions automatically. DuckDB plans statically from whatever statistics are available, and over external Parquet/Iceberg scans those statistics are often thin or absent, so join order and build-side selection are chosen from estimates. A single misestimated cardinality on a 2 TB input produces a build side that does not fit, converting a 20-minute join into hours of spill or an OOM. Crucially this is data-dependent: the replay in CL-002 validates one night's distribution, but the failure arrives on the night the distribution shifts (month-end, a large new customer, a skewed upstream key), and there is no runtime adaptation and no ability to hand-hint the plan the way Spark broadcast hints and repartitioning allow. This makes the measured-once 'FACT' a point estimate of a variable quantity.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "Replay the heaviest joins/aggregations against the most skewed historical night (not a typical one) and against a synthetic 3-5x key-skew perturbation; confirm plans remain stable and wall clock stays inside the window. Document what plan-control levers exist in DuckDB if an estimate goes wrong in production.",
+      "raised_in_round": 3
+    },
+    {
+      "id": "CH-019",
+      "target_claim": "CL-003",
+      "title": "DuckDB's single-process, single-writer model constrains the pipeline topology, not just the SQL",
+      "argument": "The claim scopes feasibility to SQL and extension coverage, but the harder structural gap is the execution/transaction model. A DuckDB database file supports one writer process; concurrent jobs that need to write intermediate tables must either share one long-lived process (recreating the shared-memory contention in CH-001 and turning any single job's crash into a loss of all in-flight work) or run as separate processes against separate files, which breaks intermediate-result sharing and forces re-materialization through Parquet on disk. Spark DAGs commonly rely on cached/reused intermediates across stages and on many jobs reading and writing the same tables concurrently. There is also no cross-process buffer-pool sharing, so a dimension table read by five jobs is decoded five times. Migrating the SQL therefore does not migrate the pipeline: the DAG topology, intermediate materialization strategy, and concurrency model must all be redesigned, and that redesign is not in the scope CL-003 describes.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "Map the current DAG: count jobs that write concurrently to shared tables, reuse cached intermediates, or depend on another job's in-flight output. For each, state the DuckDB-side design (single process vs. process-per-job, materialization via Parquet, orchestration changes) and prototype the most interconnected sub-DAG end-to-end.",
+      "raised_in_round": 3
+    },
+    {
+      "id": "CH-020",
+      "target_claim": "CL-004",
+      "title": "Whole-job restart is a correctness problem, not only a time problem",
+      "argument": "CL-004 prices node failure purely as lost wall clock, but the more damaging consequence is partial output. Spark on Delta/Iceberg gives atomic commits and staged-then-committed writes, so a killed job leaves no visible partial state. A DuckDB job killed mid-write \u2014 whether by OOM, spot/maintenance eviction, or operator intervention \u2014 can leave partially written Parquet files, half-populated target directories, or a partially applied set of table mutations that downstream consumers will happily read as complete. Recovery then requires manual cleanup and reconciliation under time pressure at 3am, and any downstream job that already consumed the partial output has propagated wrong numbers silently. Idempotent, atomically committed writes are achievable in DuckDB but must be deliberately engineered (write-to-temp-prefix-then-atomic-swap, per-run manifests, deterministic partition overwrite) and that engineering is neither in CL-004's reasoning nor in CL-007's migration budget.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "Specify and test the write-commit protocol for every output: kill the process at 50% completion of a representative job and demonstrate that no downstream reader can observe partial output, that rerun is idempotent, and that no manual cleanup is required. Add the cost of building this protocol to the migration estimate.",
+      "raised_in_round": 3
+    },
+    {
+      "id": "CH-021",
+      "target_claim": "CL-006",
+      "title": "The Spark platform likely has other tenants, so its cost does not disappear when batch leaves",
+      "argument": "The saving assumes the Spark cluster is dedicated to these nightly jobs and can be shut off. In most organizations the same Databricks/EMR footprint also serves ad-hoc analyst queries, notebook development, ML training, and other teams' jobs, and it carries the catalog, lineage, and access-control layer the whole platform depends on. If any of those remain, the platform's fixed and control-plane costs persist and only the marginal nightly compute is saved \u2014 often a fraction of the line item the business case is quoting. Worse, the org then pays for two data platforms indefinitely, plus the seam between them (data must be readable by both, permissions maintained twice). This is distinct from the commitment-contract issue: even with no contract, the residual platform is not free.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "Attribute current Spark platform spend into (a) nightly batch compute that genuinely disappears, (b) other workloads that must be re-homed or retained, and (c) fixed/control-plane/catalog costs that persist regardless. Recompute the saving using only (a), and state explicitly whether the Spark platform is decommissioned or kept.",
+      "raised_in_round": 3
+    },
+    {
+      "id": "CH-022",
+      "target_claim": "CL-008",
+      "title": "Managed-platform governance controls become the team's problem on a raw instance",
+      "argument": "Beyond runbooks and observability, Databricks/EMR supply governance machinery that is easy to forget until it is gone: table- and column-level access control, credential brokering so jobs never hold broad source-store keys, audit logs of who queried what, PII masking/row filters, encryption-key management, and network isolation attested for compliance. A single large EC2/GCE instance running DuckDB typically holds one broad IAM role with read access to the entire data lake and writes to local files with no per-table authorization and no query audit trail. In a regulated environment (finance close, PII, SOC 2 / GDPR scope) this is not an ergonomics trade-off but a control regression that security review can veto after the rewrite is already underway \u2014 and validating the migration on production data in a non-production environment may itself require a data-handling approval that has its own lead time.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "Walk the target architecture past security/compliance before committing budget: confirm acceptable answers for access control granularity, credential scope, query audit logging, PII handling, key management, and the approval path for using production data in the parity harness. Record any required compensating controls as scoped migration work.",
+      "raised_in_round": 3
+    }
+  ],
+  "review_rounds": [
+    {
+      "round": 1,
+      "new_challenges": 10,
+      "new_material_or_blocking": 10,
+      "completed_at": "2026-09-05T19:36:01.355198+00:00"
+    },
+    {
+      "round": 2,
+      "new_challenges": 5,
+      "new_material_or_blocking": 5,
+      "completed_at": "2026-09-05T19:37:15.903895+00:00"
+    },
+    {
+      "round": 3,
+      "new_challenges": 7,
+      "new_material_or_blocking": 7,
+      "completed_at": "2026-09-05T19:39:01.147330+00:00"
+    }
+  ],
+  "review_policy": {
+    "max_rounds": 3,
+    "stop_on_no_new_material": true
+  },
+  "termination": {
+    "reason": "Maximum review rounds reached (3).",
+    "round": 3,
+    "closed_at": "2026-09-05T19:39:01.147330+00:00"
+  },
+  "commitment": {
+    "action": "WAIT",
+    "matched_rule": "UNRESOLVED_BLOCKING",
+    "triggering_challenges": [
+      "CH-001",
+      "CH-002",
+      "CH-003",
+      "CH-006",
+      "CH-011",
+      "CH-016",
+      "CH-017",
+      "CH-019",
+      "CH-021"
+    ],
+    "reasons": [
+      "Blocking unresolved challenge: Per-job peak is not the binding constraint; concurrency and spill cliffs are",
+      "Blocking unresolved challenge: 2 TB/day ingest understates actual bytes moved; single NIC is the ceiling",
+      "Blocking unresolved challenge: UDFs and ML steps are the likely hard stop, not SQL dialect",
+      "Blocking unresolved challenge: Wrong baseline: compares optimized DuckDB against un-optimized Spark",
+      "Blocking unresolved challenge: The migration target is moving: pipelines keep changing during a multi-quarter rewrite",
+      "Blocking unresolved challenge: The 'local-NVMe spill budget' may not exist on the instance types that have the RAM",
+      "Blocking unresolved challenge: Single-node compute does not scale linearly with core count; the SLA math assumes it does",
+      "Blocking unresolved challenge: DuckDB's single-process, single-writer model constrains the pipeline topology, not just the SQL",
+      "Blocking unresolved challenge: The Spark platform likely has other tenants, so its cost does not disappear when batch leaves"
+    ],
+    "accepted_risks": [],
+    "committed_at": "2026-09-05T19:39:01.147330+00:00",
+    "gate": "deterministic-v1",
+    "if_triggers_resolved": {
+      "action": "ACT",
+      "matched_rule": "NO_UNRESOLVED_FATAL_OR_BLOCKING",
+      "triggering_challenges": [],
+      "accepted_risks": [
+        "Rerun-fits-in-window and I/O-fits-in-window cannot both be comfortably true",
+        "The rewrite is one-way; 'cheap re-migration' is the weakest link in the argument",
+        "Always-on large instance may erase the saving that transient Spark already captures",
+        "Parity diffing will produce ambiguous diffs that are expensive to adjudicate",
+        "Operational surface is relocated, not removed",
+        "Binary framing ignores the hybrid, which likely dominates both options",
+        "Parity diffing is a one-shot oracle that disappears at cutover",
+        "Savings may be contractually unrealizable for 1-3 years",
+        "Headroom must cover burst reprocessing, not just steady-state nightly volume",
+        "The value judgment is made by the party that captures the benefit but not the risk",
+        "No adaptive execution: a single bad plan on a skewed night blows the window with no recovery",
+        "Whole-job restart is a correctness problem, not only a time problem",
+        "Managed-platform governance controls become the team's problem on a raw instance"
+      ]
+    }
+  }
+}

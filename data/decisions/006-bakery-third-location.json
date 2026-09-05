@@ -1,0 +1,356 @@
+{
+  "id": "DG-20260905200308",
+  "decision": "Should a two-location bakery open a third location in a neighboring town before hiring a general manager?",
+  "context": "",
+  "created_at": "2026-09-05T20:03:08.852238+00:00",
+  "claims": [
+    {
+      "id": "CL-001",
+      "title": "Owner capacity exists for a third site",
+      "statement": "The owner(s) currently have at least 15\u201320 hours per week of uncommitted working time that can be redirected to opening and stabilizing a third location without degrading operations at the existing two.",
+      "kind": "ASSUMPTION",
+      "depends_on": []
+    },
+    {
+      "id": "CL-002",
+      "title": "Existing two locations run without daily owner intervention",
+      "statement": "Each existing location has a shift lead or store manager who handles opening, closing, scheduling, and customer escalations, evidenced by the owner being absent for a full week in the last six months with no material drop in sales or quality scores.",
+      "kind": "FACT",
+      "depends_on": []
+    },
+    {
+      "id": "CL-003",
+      "title": "Neighboring-town demand is validated, not assumed",
+      "statement": "There is direct evidence of unmet bakery demand in the target town \u2014 e.g., documented customer travel from that town to existing locations, competitor count and pricing, or a signed LOI/foot-traffic study \u2014 sufficient to project break-even within a stated number of months.",
+      "kind": "FACT",
+      "depends_on": []
+    },
+    {
+      "id": "CL-004",
+      "title": "Capital survives a slow ramp",
+      "statement": "Available cash plus committed financing covers build-out, opening inventory, and 9\u201312 months of the third location's operating losses at a pessimistic revenue case, without drawing down working capital needed by locations one and two.",
+      "kind": "DEPENDENCY",
+      "depends_on": []
+    },
+    {
+      "id": "CL-005",
+      "title": "Production capacity scales to three sites",
+      "statement": "Central or per-site production (equipment, bakers, distribution logistics) can supply a third location at target quality and margin, or the cost of the required capacity expansion is included in the capital plan.",
+      "kind": "DEPENDENCY",
+      "depends_on": []
+    },
+    {
+      "id": "CL-006",
+      "title": "A GM is not the binding constraint at three sites",
+      "statement": "Multi-site coordination load at three locations (hiring, inventory, standards enforcement, P&L review) remains within what the owner can absorb, such that the absence of a general manager does not measurably reduce revenue or quality at any location.",
+      "kind": "ASSUMPTION",
+      "depends_on": []
+    },
+    {
+      "id": "CL-007",
+      "title": "Sequencing cost is asymmetric in favor of expanding first",
+      "statement": "The cost of delaying expansion (lost lease, competitor entry, lost market timing) exceeds the expected cost of the operational risk incurred by running three sites without a GM.",
+      "kind": "VALUE_JUDGMENT",
+      "depends_on": []
+    },
+    {
+      "id": "CL-008",
+      "title": "Third location improves GM economics later",
+      "statement": "A three-location revenue base can support a general manager's fully-loaded salary at target margin, whereas a two-location base cannot \u2014 making expansion-first the cheaper path to eventually hiring one.",
+      "kind": "ASSUMPTION",
+      "depends_on": []
+    }
+  ],
+  "challenges": [
+    {
+      "id": "CH-001",
+      "target_claim": "CL-001",
+      "title": "Steady-state hours are the wrong unit for a launch",
+      "argument": "Opening a site is not a 15\u201320 hr/week steady load; it is a 40\u201360 hr/week spike for roughly 8\u201316 weeks (permits, build-out punch lists, hiring and training a full crew, recipe/equipment calibration, first-90-day fire-fighting), followed by elevated load. A 15\u201320 hr/week slack budget is structurally insufficient for the peak even if it is adequate for the average, and the peak is exactly when errors are unrecoverable. Furthermore, 'uncommitted time' in a two-site owner-operated bakery is typically the buffer that absorbs call-outs, equipment failure and supplier problems \u2014 spending it means the existing sites lose their shock absorber, not their scheduled hours.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "A week-by-week launch task plan with hour estimates showing the peak-week requirement, reconciled against a two-week time log of the owner's actual current hours split into scheduled vs. reactive/firefighting time, plus a named backup who covers the reactive load during launch.",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-002",
+      "target_claim": "CL-002",
+      "title": "One planned week away is not evidence of managerial independence",
+      "argument": "A single pre-planned week is the easiest possible test: schedules are built in advance, inventory is pre-ordered, no hiring or termination falls in the window, and the owner is almost certainly still reachable by phone. It demonstrates the sites can coast, not that they can be governed. The relevant capability for three-site operation is whether leads handle a resignation, a health inspection, an equipment failure, a bad review cycle, and a period-close without the owner \u2014 over multiple weeks. Sales and 'quality scores' also lag by weeks, so a one-week window would not reveal degradation even if it occurred.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "A 3\u20134 week owner-absent test with phone escalation logged and counted, spanning at least one hiring/scheduling cycle and one period close, with waste %, labor %, customer complaints and mystery-shop scores tracked for 60 days after to catch lagged effects.",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-003",
+      "target_claim": "CL-003",
+      "title": "Neighboring-town demand evidence may be cannibalization in disguise",
+      "argument": "'Customers travel from that town to us' is the most-cited evidence and the weakest: if the towns are adjacent, those customers' spend already appears in existing-location revenue, so the third site transfers rather than adds it \u2014 while adding a full fixed-cost base. The claim as written projects break-even on gross new-site revenue and does not net out the revenue lost at locations one and two inside the overlapping trade area. It also doesn't distinguish destination demand (people who will drive) from convenience demand (people who buy because they are already passing), which behave very differently once a closer option exists.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "Loyalty/POS postal-code analysis quantifying the share of existing revenue originating in the target town's catchment, with the break-even projection restated on net-new contribution after an explicit cannibalization assumption (and a sensitivity at 2x that assumption).",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-004",
+      "target_claim": "CL-004",
+      "title": "Capital model treats site 3 failure as isolated when it is correlated",
+      "argument": "The runway test ring-fences the third location's losses, but the failure mode is not ring-fenced. A struggling third site pulls owner attention away from the two profitable sites precisely when it is losing money, so the realistic pessimistic case is site-3 losses plus a several-percent revenue/margin decline at sites 1 and 2 \u2014 a correlated drawdown the model omits. If financing involves personal guarantees, cross-collateralization, or a lease with a personal guarantee, the downside is not capped at the invested capital either.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "A restated pessimistic case that simultaneously applies site-3 loss and a 5\u201310% contribution decline at existing sites, plus written confirmation of whether the lease and financing are cross-guaranteed and what the maximum loss and exit/termination cost actually are.",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-005",
+      "target_claim": "CL-005",
+      "title": "The scarce input is trained people, not equipment",
+      "argument": "The claim scopes capacity as equipment, bakers and logistics with a capital cost attached, but the binding constraint in multi-site food operations is usually a trained opening lead and head baker who know the recipes and standards. These are almost always sourced by promoting the best person out of an existing location, which silently degrades sites 1 and 2 at the exact moment the owner's attention is elsewhere. That transfer cost appears in no capital plan because it shows up as slower throughput and higher waste at the donor site, not as a line item.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "A named staffing plan for the third site identifying who fills lead and head-baker roles, who backfills them at the donor location, and evidence the backfill is hired and trained to standard before the third site opens.",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-006",
+      "target_claim": "CL-006",
+      "title": "Coordination load rises non-linearly and is detected only after the damage",
+      "argument": "Going from two to three sites is not a 50% increase in coordination load; it crosses the threshold where the owner can no longer be physically present at each site weekly, so control shifts from direct observation to reported metrics \u2014 a system that does not yet exist. The claim's own success criterion ('does not measurably reduce revenue or quality') is also unfalsifiable in advance and lagging in practice: standards drift, hiring quality decline, and inventory shrink surface in the P&L one to two quarters after they begin. By the time the assumption is disproven, the third lease is signed and the drift is entrenched at all three sites.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "A defined leading-indicator dashboard (waste %, labor %, mystery shop, complaint rate, on-time open rate per site) running and stable across both existing sites for 60+ days before opening, with pre-committed thresholds that trigger hiring a GM.",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-007",
+      "target_claim": "CL-007",
+      "title": "Lease and timing urgency is usually softer than presented",
+      "argument": "The asymmetry rests on 'lost lease / competitor entry / market timing,' all of which are typically asserted by a landlord or broker with an interest in fast signature, and none of which are quantified in the claim. Retail sites in a neighboring town rarely disappear permanently, and a competitor opening does not eliminate the market so much as split it. Meanwhile the operational risk side of the ledger is left as a vague 'risk' rather than priced. As written the judgment compares a vividly-framed loss against an unpriced one, which reliably biases toward acting now.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "Written evidence of genuine scarcity \u2014 e.g., a competing offer on the specific site, or a survey of comparable available spaces in the town over the last 12 months \u2014 alongside a dollar estimate of the expansion-risk side (probability-weighted site-3 loss plus modeled degradation at sites 1 and 2).",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-008",
+      "target_claim": "CL-008",
+      "title": "The affordability argument inverts the correct hiring sequence",
+      "argument": "Two problems. First, the affordability comparison ignores that a GM's cost is partly offset today by freeing owner hours \u2014 the same hours CL-001 claims are the scarce input for expansion; if those hours are valuable enough to build a location with, they are valuable enough to buy back. Second, and more decisively, a GM hired before expansion is the person who runs the existing two sites while the owner opens the third \u2014 and has months to learn the standards in calm conditions. A GM hired after opening arrives into a three-site mess, is onboarded by a distracted owner, and must learn standards from sites already drifting. Hiring at the moment of maximum stress also worsens candidate selection and raises the cost of a mis-hire, so 'expansion-first is the cheaper path to a GM' may be false even on its own financial terms.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "A side-by-side model of GM-first vs. expansion-first over 24 months that prices the owner's freed hours in the GM-first case, includes a 30% GM mis-hire probability with replacement cost in both, and tests whether two-site margin actually cannot cover a fully-loaded GM salary at realistic (not target) margin.",
+      "raised_in_round": 1
+    },
+    {
+      "id": "CH-009",
+      "target_claim": "CL-007",
+      "title": "The decision is framed as a binary when the dominant options are in between",
+      "argument": "CL-007 prices 'expand now without a GM' against 'delay expansion,' but those are not the only two branches, and the middle branches are likely cheaper on both axes. Available alternatives include: promote one existing shift lead to a part-time multi-unit supervisor at a fraction of GM cost; hire a fractional/interim operations manager for the 6-month launch window; open the third site in a lower-fixed-cost format (kiosk, farmers-market stall, wholesale accounts into the target town's cafes and grocers) to test demand before committing to a lease; or take the lease with a delayed-possession or free-rent build-out period that buys time to hire. Each of these preserves the market-timing option the claim says is at risk while removing most of the operational risk it declines to price. A value judgment that compares only the two extreme branches will systematically over-select the riskier one, and the LOI/lease is the point of no return.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "A written option comparison of at least four branches (expand-now-no-GM, GM-first, supervisor/fractional-ops variant, low-capex format or wholesale entry into the target town) scored on capital at risk, time-to-market-presence, and owner hours required \u2014 showing expand-now-no-GM is not dominated by a middle option.",
+      "raised_in_round": 2
+    },
+    {
+      "id": "CH-010",
+      "target_claim": "CL-003",
+      "title": "Town-level demand evidence does not validate a specific site, and brand equity may not cross the town line",
+      "argument": "The evidence types listed (competitor count, pricing, travel patterns, foot-traffic study) validate that a town could support a bakery \u2014 not that this unit, at this address, at this rent, will hit the projected break-even. Bakery revenue is dominated by micro-location factors: morning commute direction, parking, adjacency to a grocery anchor or school, side-of-street, and visibility. A site two blocks off the flow can do half the volume of one on it. Second, the two locations' current performance rests substantially on accumulated local reputation and habit built over years; in a neighboring town where the brand is unknown, the ramp curve is slower and the pessimistic case in CL-004 must be calibrated to a cold-start, not to how location two performed when it opened into an existing customer base and word-of-mouth network. Break-even 'within a stated number of months' derived from location two's ramp is therefore likely optimistic.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "Site-specific evidence: measured pedestrian/vehicle counts at the actual address by daypart benchmarked against the equivalent measure at existing sites, plus the ramp curve for location two restated with an explicit adjustment for zero pre-existing brand awareness in the new town, and rent-per-projected-revenue compared against the two existing sites.",
+      "raised_in_round": 2
+    },
+    {
+      "id": "CH-011",
+      "target_claim": "CL-002",
+      "title": "Independence is embodied in two individuals, not in a system, and expansion changes their incentives",
+      "argument": "Even granting the claim, what it establishes is that two specific people are currently competent \u2014 not that the operation is transferable. If standards live in those individuals' heads rather than in documented recipes, prep sheets, open/close checklists and training curricula, then the business has two single points of failure today and will have three tomorrow, with the owner's attention divided. Worse, expansion actively destabilizes them: a third site typically means the best lead is promoted or moved (per CH-005), the remaining lead absorbs more autonomy without more pay, and both watch the owner's attention move elsewhere. This is exactly the profile that triggers resignations, and in a tight food-service labor market a lead who leaves during launch cannot be replaced in under 8-12 weeks at standard. The claim's evidence (one absent week) says nothing about retention risk under changed conditions.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "Documented SOPs sufficient for a competent outsider to open, close, produce and schedule at standard (tested by having a non-lead run a shift from the documents), plus a retention plan for both existing leads \u2014 compensation/role/career conversation held and documented before any lease signature \u2014 and a stated replacement lead-time for each lead role.",
+      "raised_in_round": 2
+    },
+    {
+      "id": "CH-012",
+      "target_claim": "CL-004",
+      "title": "Runway without a pre-committed kill criterion becomes the size of the loss, not the size of the buffer",
+      "argument": "A 9-12 month pessimistic runway is only a safety margin if there is a rule that fires when it is being consumed. In practice owners at month 8 of a slow ramp do not close; they extend \u2014 with personal funds, a HELOC, deferred owner draws, or delayed maintenance capex at sites one and two \u2014 because the sunk build-out and the lease term make quitting feel irrational. The claim also omits two cash items: the owner's own income needs during a period when they are working 40-60 hours on a non-earning asset, and the exit cost (lease termination or assignment, equipment disposal at salvage, severance) which is not zero and often equals several months of rent. Without a written stop-loss and a known exit price, 'capital survives a slow ramp' describes the maximum loss rather than bounding it.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "A written stop-loss with objective triggers (e.g., weekly net-new revenue below X by week 20 \u2192 begin exit) agreed by all owners before signing, the lease's assignment/termination/personal-guarantee terms in writing with a dollar exit cost, and the pessimistic cash model restated to include owner draw and that exit cost.",
+      "raised_in_round": 2
+    },
+    {
+      "id": "CH-013",
+      "target_claim": "CL-005",
+      "title": "Crossing a municipal boundary can change the regulatory and cost basis of production",
+      "argument": "The claim treats capacity as a physics-and-capex problem, but distributing product from a central kitchen to a site in a different town or county often changes legal category: it can require a wholesale/commissary license rather than a retail food permit, transport under temperature control, nutritional or allergen labeling for pre-packaged transported goods, a separate health jurisdiction's inspection regime and plan review, and potentially different fire/occupancy build-out standards that inflate the build-out estimate after the lease is signed. The new town may also have a different minimum wage, commercial rent basis, or business tax. Separately, 'cost of required capacity expansion is included' assumes marginal costing, but bakery capacity is a step function \u2014 one more deck oven, retarder or delivery van, and often a second production shift with a night-premium head baker \u2014 so the incremental cost per unit of the third site's volume can be far higher than the average cost across sites one and two.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "Written confirmation from the target jurisdiction's health/permitting authority on license category, plan-review requirements and timeline for supplying that site from the existing production location, plus a capacity model showing the specific equipment/labor step required and its full cost, not a per-unit average.",
+      "raised_in_round": 2
+    },
+    {
+      "id": "CH-014",
+      "target_claim": "CL-006",
+      "title": "The GM's function is not only coordination load \u2014 it is the only continuity plan for three sites",
+      "argument": "CL-006 defines the GM purely as absorbable workload, and concludes that if the owner can carry the hours, no GM is needed. That omits the role's insurance function. In the no-GM configuration, the owner is the sole person with authority to hire, fire, sign, order, and set standards across all three sites, during an 8-16 week period of 40-60 hour weeks. An illness, injury, family emergency or burnout event at that moment does not degrade the business by a few percent \u2014 it leaves three locations, one of them unstabilized, with no one holding the P&L, against a lease that may be personally guaranteed. At two sites this concentration risk is survivable because the owner can be physically present and the loss is bounded; at three, with a fresh build-out consuming cash, it is not. The claim's success criterion ('does not measurably reduce revenue or quality') never tests the tail case, only the average one.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "A named continuity plan: who holds signing/hiring authority and access to accounts if the owner is unavailable for 30 days during the launch window, whether that person has agreed in writing, and whether key-person insurance or a standby operator arrangement is in place before the lease is signed.",
+      "raised_in_round": 2
+    },
+    {
+      "id": "CH-015",
+      "target_claim": "CL-008",
+      "title": "The claim set never establishes that the existing two-unit model is proven and at maturity",
+      "argument": "CL-008 asserts a three-location revenue base supports a GM, and CL-004 assumes locations one and two generate spare working capital \u2014 but no claim anywhere states that both existing sites are at mature volume, at target contribution margin, and cash-generating after owner compensation. This is the load-bearing precondition for the whole decision. If location two is still ramping, or runs materially below location one's margin, then the unit model is not yet validated, and a third site replicates an unproven template while tripling fixed-cost exposure. It also inverts the usual causality: owners frequently expand precisely because same-store growth has flattened, in which case a third site is a revenue-hiding maneuver \u2014 consolidated sales rise while per-unit economics deteriorate, and the deterioration is invisible for several quarters. A GM hired against a blended three-site number that includes a still-immature site is being funded by revenue that may not persist.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "Trailing-12-month P&L by location showing each site's contribution margin, same-store sales trend for the last 8 quarters, months-to-maturity for location two versus its actual current run-rate, and owner compensation shown as a real expense line \u2014 demonstrating both sites are at or above target margin without owner labor subsidy before a third is contemplated.",
+      "raised_in_round": 3
+    },
+    {
+      "id": "CH-016",
+      "target_claim": "CL-003",
+      "title": "Break-even is the wrong success bar; the test is payback and return over the lease term",
+      "argument": "CL-003's success criterion is 'break-even within a stated number of months,' which is an operating-cashflow test, not a capital test. A site that reaches operating break-even at month 10 and then generates thin contribution may never repay its build-out, and the owner is nonetheless locked into a 5-10 year lease with escalators and a personal guarantee. The relevant questions \u2014 payback period on invested capital, return on invested capital versus the alternative uses of the same money (paying down debt, deepening the two existing sites' dayparts/catering/wholesale, or funding a GM), and whether projected contribution covers rent escalation in years 3-5 \u2014 are absent. Framing the go/no-go around break-even systematically approves marginal projects, because almost any bakery eventually covers its variable costs; the failures are sites that break even and never return the capital, which are harder to close than outright losers because they are not visibly bleeding.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "A capital-returns model for site 3 showing payback period and 5-year ROIC at base and pessimistic cases, including full lease-term rent escalators, compared side-by-side against the return on deploying the same capital into the existing two sites or into a GM hire.",
+      "raised_in_round": 3
+    },
+    {
+      "id": "CH-017",
+      "target_claim": "CL-003",
+      "title": "Competitor count is a static snapshot that ignores incumbent response",
+      "argument": "The evidence types listed (competitor count, pricing, foot-traffic) describe the market as it exists before entry, but incumbents in the target town are not passive. A local bakery that has held that trade area for years will respond to a new entrant with promotions, extended hours, loyalty offers, or wholesale accounts locked up with the town's cafes; the grocery in-store bakery \u2014 often not counted as a 'competitor' in these surveys at all \u2014 competes on price and convenience for the same everyday bread and pastry spend. The projected revenue therefore reflects pre-entry share and pre-entry pricing, and the pessimistic case in CL-004 will be calibrated to a slow ramp rather than to a ramp under active price and promotional pressure. Note also that the entry is asymmetric: the incumbent defends its only market, while the entrant is defending a third of a portfolio \u2014 the incumbent will fight harder and longer.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "A named list of competing outlets in the catchment including grocery and cafe bakery programs, with their current pricing and promotional behavior, and a revenue case that assumes a competitive response (e.g., 10-15% price/promotion pressure or slower share capture) rather than static incumbent behavior.",
+      "raised_in_round": 3
+    },
+    {
+      "id": "CH-018",
+      "target_claim": "CL-004",
+      "title": "No contingency for build-out overrun or delayed opening while rent runs",
+      "argument": "The runway is scoped as build-out plus inventory plus 9-12 months of operating losses, which assumes the build-out lands on budget and the doors open on schedule. Neither is the base case in food-service build-outs: permit and plan-review cycles, landlord delivery delays, grease-trap, ventilation, ADA and electrical service upgrades discovered after demolition, and equipment lead times routinely produce 15-30% cost overruns and multi-month schedule slips. The financial consequence is compounding \u2014 the overrun consumes the loss buffer before revenue starts, while rent, loan service and any pre-hired staff run against zero sales during the delay. A model with no contingency line and no dead-rent assumption is not a pessimistic case; it is a base case relabeled. This interacts directly with CH-012: overrun and delay are the most common way a 12-month runway becomes a 5-month runway before opening day.",
+      "materiality": "BLOCKING",
+      "status": "UNRESOLVED",
+      "resolves_if": "A contractor bid or GC estimate with a stated contingency (minimum 15-20%), the landlord's delivery-condition and rent-commencement terms in writing (free-rent period, penalty for late delivery), and the cash model restated with a 3-month opening delay plus 20% build-out overrun applied simultaneously.",
+      "raised_in_round": 3
+    },
+    {
+      "id": "CH-019",
+      "target_claim": "CL-005",
+      "title": "Distance changes the freshness economics, not just the logistics cost",
+      "argument": "CL-005 treats supplying a third site as a capacity and cost question, but bakery product has a same-day quality window and the distribution schedule is what sets waste. Serving a site in another town from central production means either baking earlier (product is older at the same clock hour, so the effective selling window shrinks and afternoon quality \u2014 and repeat business \u2014 degrades), running a second delivery (a driver, a vehicle, and labor at low volume), or baking on-site (which contradicts the central-production assumption and requires an oven, a proofing setup, and a night baker at that address). Each option has a different cost structure and none of them is a marginal add-on to current operations. Waste percentage is the quiet killer here: a new site with unknown demand patterns over-produces for months, and a longer delivery leg means yesterday's misforecast cannot be corrected mid-day the way it can at a site next to the kitchen.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "A written production and delivery schedule for the three-site configuration showing bake times, delivery windows, product age at open and at 2pm for each site, plus a modeled waste % for site 3 during its first 6 months benchmarked against the waste % the existing sites ran in their first 6 months.",
+      "raised_in_round": 3
+    },
+    {
+      "id": "CH-020",
+      "target_claim": "CL-008",
+      "title": "The GM salary figure and the GM's availability are both unverified",
+      "argument": "The claim compares a three-site revenue base against 'a general manager's fully-loaded salary at target margin,' but no market wage is cited and 'fully-loaded' is doing heavy lifting: base plus payroll taxes, benefits, bonus, and typically a vehicle or mileage allowance for multi-unit travel. More importantly, the claim assumes such a person is purchasable at that number. An operator capable of running three food-retail units with P&L accountability is competing against QSR and fast-casual multi-unit roles that pay above independent-bakery budgets and offer defined career ladders; independents commonly close this gap with equity, profit share, or a path to partnership \u2014 none of which appear in the economics. If the affordable candidate is really a strong store manager with a new title, the coordination gap CL-006 worries about is not actually filled, and the owner has bought cost without buying relief. The 'expansion makes the GM affordable' argument fails if the affordable GM cannot do the job.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "Three to five real compensation benchmarks for multi-unit food-retail GMs in the local market (postings or recruiter input), a written job scope with the authorities the role would actually hold, and confirmation of whether the budgeted number attracts candidates with prior multi-unit P&L experience or only single-site managers.",
+      "raised_in_round": 3
+    },
+    {
+      "id": "CH-021",
+      "target_claim": "CL-001",
+      "title": "'Owner(s)' hides a governance question: whose hours, and is the partnership aligned on the risk",
+      "argument": "The claim aggregates capacity across an unspecified number of owners, which conceals two failure modes. First, hours are not fungible: if one owner is the head baker and the other handles front-of-house and books, only some of that slack can be redirected to a launch, and pulling the baking owner off the bench degrades production quality directly rather than at the margin. Second, if there are multiple owners, expansion under personal guarantee is a decision that binds all of them to correlated downside, and partnerships that have never stress-tested a disagreement typically discover their divergence at month 8 of a slow ramp \u2014 precisely when CH-012's stop-loss needs to fire and one partner wants to extend while the other wants out. A launch is the worst possible moment to discover there is no deadlock-resolution mechanism, no agreed capital-call rule, and no buy-sell provision.",
+      "materiality": "MATERIAL",
+      "status": "UNRESOLVED",
+      "resolves_if": "A breakdown of current weekly hours by named owner and by function (production, front-of-house, admin, reactive) showing which hours are actually transferable to a launch, plus \u2014 if more than one owner \u2014 written agreement on the capital-call obligation, the stop-loss trigger, and the buy-sell/deadlock mechanism, signed before any lease or LOI.",
+      "raised_in_round": 3
+    }
+  ],
+  "review_rounds": [
+    {
+      "round": 1,
+      "new_challenges": 8,
+      "new_material_or_blocking": 8,
+      "completed_at": "2026-09-05T20:04:05.839171+00:00"
+    },
+    {
+      "round": 2,
+      "new_challenges": 6,
+      "new_material_or_blocking": 6,
+      "completed_at": "2026-09-05T20:05:27.142526+00:00"
+    },
+    {
+      "round": 3,
+      "new_challenges": 7,
+      "new_material_or_blocking": 7,
+      "completed_at": "2026-09-05T20:06:58.393215+00:00"
+    }
+  ],
+  "review_policy": {
+    "max_rounds": 3,
+    "stop_on_no_new_material": true
+  },
+  "termination": {
+    "reason": "Maximum review rounds reached (3).",
+    "round": 3,
+    "closed_at": "2026-09-05T20:06:58.393215+00:00"
+  },
+  "commitment": {
+    "action": "WAIT",
+    "matched_rule": "UNRESOLVED_BLOCKING",
+    "triggering_challenges": [
+      "CH-001",
+      "CH-002",
+      "CH-003",
+      "CH-004",
+      "CH-005",
+      "CH-008",
+      "CH-009",
+      "CH-010",
+      "CH-011",
+      "CH-012",
+      "CH-015",
+      "CH-018"
+    ],
+    "reasons": [
+      "Blocking unresolved challenge: Steady-state hours are the wrong unit for a launch",
+      "Blocking unresolved challenge: One planned week away is not evidence of managerial independence",
+      "Blocking unresolved challenge: Neighboring-town demand evidence may be cannibalization in disguise",
+      "Blocking unresolved challenge: Capital model treats site 3 failure as isolated when it is correlated",
+      "Blocking unresolved challenge: The scarce input is trained people, not equipment",
+      "Blocking unresolved challenge: The affordability argument inverts the correct hiring sequence",
+      "Blocking unresolved challenge: The decision is framed as a binary when the dominant options are in between",
+      "Blocking unresolved challenge: Town-level demand evidence does not validate a specific site, and brand equity may not cross the town line",
+      "Blocking unresolved challenge: Independence is embodied in two individuals, not in a system, and expansion changes their incentives",
+      "Blocking unresolved challenge: Runway without a pre-committed kill criterion becomes the size of the loss, not the size of the buffer",
+      "Blocking unresolved challenge: The claim set never establishes that the existing two-unit model is proven and at maturity",
+      "Blocking unresolved challenge: No contingency for build-out overrun or delayed opening while rent runs"
+    ],
+    "accepted_risks": [],
+    "committed_at": "2026-09-05T20:06:58.393215+00:00",
+    "gate": "deterministic-v1",
+    "if_triggers_resolved": {
+      "action": "ACT",
+      "matched_rule": "NO_UNRESOLVED_FATAL_OR_BLOCKING",
+      "triggering_challenges": [],
+      "accepted_risks": [
+        "Coordination load rises non-linearly and is detected only after the damage",
+        "Lease and timing urgency is usually softer than presented",
+        "Crossing a municipal boundary can change the regulatory and cost basis of production",
+        "The GM's function is not only coordination load \u2014 it is the only continuity plan for three sites",
+        "Break-even is the wrong success bar; the test is payback and return over the lease term",
+        "Competitor count is a static snapshot that ignores incumbent response",
+        "Distance changes the freshness economics, not just the logistics cost",
+        "The GM salary figure and the GM's availability are both unverified",
+        "'Owner(s)' hides a governance question: whose hours, and is the partnership aligned on the risk"
+      ]
+    }
+  }
+}
