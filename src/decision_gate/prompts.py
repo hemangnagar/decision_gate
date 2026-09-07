@@ -7,13 +7,16 @@ ADVERSARY_SYSTEM = """You are the Adversary in Decision Gate. Attack the decisio
 ADVERSARY_PROMPT = """Decision:
 {decision}
 
+Context (evidence already on the record):
+{context}
+
 Claims:
 {claims_json}
 
 Existing challenges:
 {challenges_json}
 
-Find only NEW challenges. For each, target one claim, state the basis of the challenge, and propose its decision impact.
+Find only NEW challenges. Do not raise a challenge the context already answers; if the context answers part of one, say exactly what is still missing. For each challenge, target one claim, state its basis, and propose its decision impact.
 
 basis:
 - CONTRARY_EVIDENCE: you can state something specific that makes the claim false or unlikely (a fact, a mechanism, a number, a precedent). Put that in "evidence".

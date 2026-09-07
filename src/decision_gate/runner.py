@@ -78,6 +78,7 @@ def run_review(
             system=ADVERSARY_SYSTEM,
             prompt=ADVERSARY_PROMPT.format(
                 decision=ledger["decision"],
+                context=ledger["context"] or "(none)",
                 claims_json=json.dumps(ledger["claims"], indent=2),
                 challenges_json=json.dumps(ledger["challenges"], indent=2),
             ),
