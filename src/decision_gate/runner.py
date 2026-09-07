@@ -4,7 +4,8 @@ import json
 from datetime import datetime, timezone
 from typing import Any, Callable
 
-from .gate import MATERIALITY_RANK, assign_materiality, evaluate_gate, evaluate_if_resolved, should_stop
+from .gate import MATERIALITY_RANK, assign_materiality, should_stop
+from .lifecycle import build_commitment
 from .prompts import ADVERSARY_PROMPT, ADVERSARY_SYSTEM, BUILDER_PROMPT, BUILDER_SYSTEM, REBUTTAL_PROMPT, REBUTTAL_SYSTEM
 from .providers import Provider
 from .rebuttal import apply_rebuttals, apply_withdrawals
@@ -178,23 +179,6 @@ def run_review(
     if "termination" not in ledger:
         ledger["termination"] = {"reason": "Review policy completed.", "round": len(ledger["review_rounds"]), "closed_at": _now()}
 
-    gate = evaluate_gate(ledger)
-    ledger["commitment"] = {
-        "action": gate.action,
-        "matched_rule": gate.matched_rule,
-        "triggering_challenges": gate.triggering_challenges,
-        "reasons": gate.reasons,
-        "accepted_risks": gate.accepted_risks,
-        "committed_at": _now(),
-        "gate": "deterministic-v1",
-    }
-    say(f"gate: {gate.action} ({gate.matched_rule})")
-    if gate.triggering_challenges:
-        after = evaluate_if_resolved(ledger, gate.triggering_challenges)
-        ledger["commitment"]["if_triggers_resolved"] = {
-            "action": after.action,
-            "matched_rule": after.matched_rule,
-            "triggering_challenges": after.triggering_challenges,
-            "accepted_risks": after.accepted_risks,
-        }
+    ledger["commitment"] = build_commitment(ledger)
+    say(f"gate: {ledger['commitment']['action']} ({ledger['commitment']['matched_rule']})")
     return ledger

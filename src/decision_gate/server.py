@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from .demo import DEMO_CONTEXT, DEMO_DECISION, DemoAdversary, DemoBuilder
+from .lifecycle import resolve_challenge
 from .providers import LiteLLMProvider
 from .runner import run_review
 
@@ -33,6 +34,9 @@ class DecisionGateHandler(SimpleHTTPRequestHandler):
         super().do_GET()
 
     def do_POST(self) -> None:
+        if self.path == "/api/resolve":
+            self._resolve()
+            return
         if self.path != "/api/review":
             self._json(404, {"error": "not found"})
             return
@@ -64,6 +68,19 @@ class DecisionGateHandler(SimpleHTTPRequestHandler):
                 max_rounds=max_rounds,
             )
             ledger["mode"] = mode
+            self._json(200, ledger)
+        except Exception as exc:
+            self._json(400, {"error": str(exc)})
+
+    def _resolve(self) -> None:
+        """A human closes a challenge with evidence; the server is stateless, so the client sends the ledger."""
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+            data = json.loads(self.rfile.read(length) or b"{}")
+            ledger = data.get("ledger")
+            if not isinstance(ledger, dict):
+                raise ValueError("ledger is required")
+            resolve_challenge(ledger, challenge_id=str(data.get("challenge_id") or ""), evidence=str(data.get("evidence") or ""))
             self._json(200, ledger)
         except Exception as exc:
             self._json(400, {"error": str(exc)})

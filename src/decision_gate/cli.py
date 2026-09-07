@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 from .gate import evaluate_gate, evaluate_if_resolved, should_stop
-from .lifecycle import check_reopen, score_outcomes
+from .lifecycle import check_reopen, resolve_challenge, score_outcomes
 from .providers import LiteLLMProvider
 from .runner import run_review
 from .validate import validate_ledger
@@ -37,6 +37,12 @@ def main() -> None:
     ro.add_argument("--trigger", required=True, choices=["NEW_EVIDENCE", "DEPENDENCY_CHANGED", "OUTCOME_CONTRADICTION", "USER_EXPLICIT"])
     ro.add_argument("--challenge")
 
+    rs = s.add_parser("resolve", help="close a challenge with evidence and re-run the gate")
+    rs.add_argument("ledger")
+    rs.add_argument("--challenge", required=True)
+    rs.add_argument("--evidence", required=True)
+    rs.add_argument("--out", help="write the updated ledger here (default: overwrite the input)")
+
     sc = s.add_parser("score")
     sc.add_argument("ledger")
     sc.add_argument("outcomes")
@@ -64,6 +70,16 @@ def main() -> None:
         ok, reason = check_reopen(load(args.ledger), trigger=args.trigger, challenge_id=args.challenge)
         print("REOPEN" if ok else "KEEP_CLOSED")
         print(reason)
+        return
+
+    if args.cmd == "resolve":
+        ledger = resolve_challenge(load(args.ledger), challenge_id=args.challenge, evidence=args.evidence)
+        out = args.out or args.ledger
+        Path(out).write_text(json.dumps(ledger, indent=2))
+        before = (ledger.get("commitment_history") or [{}])[-1].get("action", "?")
+        print(f"RESOLVED {args.challenge}")
+        print(f"Gate: {before} -> {ledger['commitment']['action']} ({ledger['commitment']['matched_rule']})")
+        print(out)
         return
 
     if args.cmd == "score":
