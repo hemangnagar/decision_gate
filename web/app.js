@@ -1,6 +1,7 @@
 const $ = id => document.getElementById(id);
 let currentLedger = null;
 const esc = value => String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
+const nice = value => esc(String(value ?? '').replace(/_/g, ' ').toLowerCase());
 
 async function applyMode() {
   const demo = $('mode').value === 'demo';
@@ -22,6 +23,38 @@ applyMode();
 
 const titleOf = (ledger, id) => (ledger.challenges.find(c => c.id === id) || {}).title || id;
 
+function ratingLine(c) {
+  if (c.materiality_rule === 'MISSING_EVIDENCE_CAPPED') {
+    return `<p class="rule-note"><b>Basis:</b> missing evidence. The Adversary asked for ${esc(c.requested_materiality)}; the rule capped it at ${esc(c.materiality)} because a claim that is merely unproven cannot ${c.materiality === 'MATERIAL' ? 'block' : 'kill'} the decision.</p>`;
+  }
+  if (c.basis === 'CONTRARY_EVIDENCE') {
+    return `<p><b>Basis:</b> contrary evidence. <i>${esc(c.evidence)}</i></p>`;
+  }
+  if (c.basis === 'MISSING_EVIDENCE') {
+    return `<p><b>Basis:</b> missing evidence${c.materiality === 'BLOCKING' ? ', on a DEPENDENCY, so it may block' : ''}.</p>`;
+  }
+  return '';
+}
+
+function answerLine(c) {
+  const r = c.rebuttal;
+  let out = '';
+  if (r) {
+    if (r.response === 'RESOLVED') out += `<p class="answer resolved"><b>Builder:</b> resolved by quoting the record: <i>“${esc(r.evidence)}”</i></p>`;
+    else if (r.response === 'DISPUTED') out += `<p class="answer"><b>Builder:</b> disputed. ${esc(r.argument)}${r.rejected_evidence ? ` <span class="rule-note">(Claimed to resolve it with “${esc(r.rejected_evidence)}”, which is not in the context. Rejected.)</span>` : ''}</p>`;
+    else if (r.response === 'CONCEDED') out += `<p class="answer"><b>Builder:</b> conceded. ${esc(r.argument)}</p>`;
+    else out += `<p class="answer muted">Builder did not answer.</p>`;
+  }
+  if (c.withdrawal) out += `<p class="answer resolved"><b>Adversary:</b> withdrew this challenge. ${esc(c.withdrawal.reason)}</p>`;
+  if (c.resolution && c.resolution.by === 'HUMAN') out += `<p class="answer resolved"><b>Resolved by you</b> (${esc(c.resolution.evidence_id)}): <i>${esc(c.resolution.evidence)}</i></p>`;
+  return out;
+}
+
+function resolveForm(c) {
+  if (c.status !== 'UNRESOLVED') return '';
+  return `<div class="resolve"><textarea placeholder="Evidence that resolves ${esc(c.id)}. It goes on the record and the gate runs again." data-for="${esc(c.id)}"></textarea><button class="secondary small" data-resolve="${esc(c.id)}">Resolve with evidence</button></div>`;
+}
+
 function render(ledger) {
   currentLedger = ledger;
   $('demoBanner').classList.toggle('hidden', ledger.mode !== 'demo');
@@ -31,13 +64,26 @@ function render(ledger) {
   $('claims').innerHTML = ledger.claims.map(c =>
     `<div><b>${esc(c.id)}</b> ${esc(c.title)} <em class="kind">${esc(c.kind)}</em><small>${esc(c.statement)}</small></div>`).join('');
 
-  $('challenges').innerHTML = ledger.challenges.map(c => `
-    <details><summary><span class="pill ${esc(c.materiality.toLowerCase())}">${esc(c.materiality)}</span> <b>${esc(c.id)}</b> ${esc(c.title)} <em class="kind">on ${esc(c.target_claim)}</em></summary>
-      <p>${esc(c.argument)}</p><p><b>Resolves if:</b> ${esc(c.resolves_if)}</p>
-    </details>`).join('') || '<p class="muted">No challenges raised.</p>';
+  $('challenges').innerHTML = ledger.challenges.map(c => {
+    const status = c.status === 'UNRESOLVED' ? '' : `<span class="status ${esc(c.status.toLowerCase())}">${esc(c.status)}</span>`;
+    return `
+    <details class="${c.status === 'UNRESOLVED' ? '' : 'closed'}"><summary><span class="pill ${esc(c.materiality.toLowerCase())}">${esc(c.materiality)}</span>${status} <b>${esc(c.id)}</b> ${esc(c.title)} <em class="kind">on ${esc(c.target_claim)}</em></summary>
+      <p>${esc(c.argument)}</p>
+      ${ratingLine(c)}
+      <p><b>Resolves if:</b> ${esc(c.resolves_if)}</p>
+      ${answerLine(c)}
+      ${resolveForm(c)}
+    </details>`;
+  }).join('') || '<p class="muted">No challenges raised.</p>';
 
-  $('rounds').textContent = ledger.review_rounds.map(r =>
-    `Round ${r.round}: ${r.new_challenges ? `${r.new_challenges} new challenge${r.new_challenges === 1 ? '' : 's'}` : 'nothing new'}`).join(' · ');
+  $('rounds').textContent = ledger.review_rounds.map(r => {
+    if (!r.new_challenges && !r.withdrawn) return `Round ${r.round}: nothing new`;
+    const bits = [`${r.new_challenges} new`];
+    if (r.capped_by_rule) bits.push(`${r.capped_by_rule} capped by rule`);
+    if (r.resolved_by_builder) bits.push(`${r.resolved_by_builder} resolved by the Builder`);
+    if (r.withdrawn) bits.push(`${r.withdrawn} withdrawn`);
+    return `Round ${r.round}: ${bits.join(', ')}`;
+  }).join(' · ');
   const reason = ledger.termination?.reason || '';
   $('termination').textContent = /no new/i.test(reason)
     ? 'The last round added nothing that would change the gate. More argument will not move it. Only evidence can.'
@@ -53,13 +99,21 @@ function render(ledger) {
     ? `Triggered by ${triggers.map(id => `<b>${esc(id)}</b> ${esc(titleOf(ledger, id))}`).join('; ')}.`
     : 'No unresolved FATAL or BLOCKING challenge.';
 
+  const history = ledger.commitment_history || [];
+  $('history').classList.toggle('hidden', !history.length);
+  if (history.length) {
+    const last = (ledger.evidence || []).slice(-1)[0];
+    $('history').textContent = `Was ${history.map(h => h.action).join(', then ')}. Re-gated after ${last ? `${last.id} resolved ${last.challenge}` : 'new evidence'}.`;
+  }
+
   const risks = commit.accepted_risks || [];
   const after = commit.if_triggers_resolved;
+  const retired = ledger.challenges.filter(c => c.status === 'RESOLVED' || c.status === 'WITHDRAWN');
   let next = '';
   if (commit.action === 'ACT') {
     next = risks.length
       ? `<b>Accepted risks carried into the action</b>${risks.map(r => `<div>${esc(r)}</div>`).join('')}`
-      : '<b>No risks carried.</b> Every challenge was resolved or none was raised.';
+      : '<b>No risks carried.</b> Every challenge was resolved, withdrawn, or never raised.';
   } else {
     const unresolved = ledger.challenges.filter(c => triggers.includes(c.id));
     next = `<b>What changes this</b>${unresolved.map(c => `<div><b>${esc(c.id)}</b> resolves if: ${esc(c.resolves_if)}</div>`).join('')}`;
@@ -67,12 +121,35 @@ function render(ledger) {
       next += `<div class="then">Then the gate returns <b>${esc(after.action)}</b>${after.accepted_risks?.length ? `, carrying ${after.accepted_risks.map(r => `“${esc(r)}”`).join(' and ')} as accepted risk${after.accepted_risks.length === 1 ? '' : 's'}` : ''}.</div>`;
     }
   }
+  if (retired.length) {
+    next += `<div class="then muted">Retired on the record: ${retired.map(c => `${esc(c.id)} (${c.status === 'WITHDRAWN' ? 'withdrawn by the Adversary' : c.resolution?.by === 'HUMAN' ? 'resolved by you' : 'resolved by the Builder quoting the context'})`).join(', ')}.</div>`;
+  }
   $('nextAction').innerHTML = next;
 
   $('download').classList.remove('hidden');
   $('map').classList.remove('hidden');
-  $('map').scrollIntoView({behavior:'smooth'});
 }
+
+$('challenges').addEventListener('click', async ev => {
+  const button = ev.target.closest('button[data-resolve]');
+  if (!button || !currentLedger) return;
+  const id = button.dataset.resolve;
+  const evidence = $('challenges').querySelector(`textarea[data-for="${id}"]`).value.trim();
+  if (!evidence) return;
+  button.disabled = true;
+  try {
+    const res = await fetch('/api/resolve', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ledger: currentLedger, challenge_id: id, evidence})});
+    const body = await res.json();
+    if (!res.ok) throw new Error(body.error || 'Resolve failed');
+    render(body);
+    $('map').querySelector('.action').scrollIntoView({behavior:'smooth'});
+  } catch (err) {
+    $('error').textContent = err.message;
+    $('error').classList.remove('hidden');
+    button.disabled = false;
+  }
+});
 
 $('download').onclick = () => {
   if (!currentLedger) return;
@@ -99,6 +176,7 @@ $('review').onclick = async () => {
     const body = await res.json();
     if (!res.ok) throw new Error(body.error || 'Review failed');
     render(body);
+    $('map').scrollIntoView({behavior:'smooth'});
   } catch (err) {
     $('error').textContent = err.message;
     $('error').classList.remove('hidden');

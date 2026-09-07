@@ -122,6 +122,12 @@ becomes the size of the loss, not the size of the buffer.
 These are observations, not conclusions. Four runs with one model in both
 roles is a demonstration, not a sample.
 
+They were also run before the burden-of-proof rules existed (the
+materiality rule, the Builder rebuttal turn, and the Adversary seeing the
+context). Their challenges carry no `basis` field and none was ever
+answered. The numbers below are the reason those rules were added, and the
+files are kept unedited as that evidence.
+
 **The stop rule never fired.** All four reviews ran to `max_rounds=3` and
 terminated on the round limit. Every round produced at least five
 consequential challenges; the smallest final round was five, the largest

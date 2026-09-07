@@ -4,10 +4,10 @@
 <section class="hero">
   <div class="eyebrow">DECISION GATE</div>
   <h1>Challenge the decision.<br>Then make one.</h1>
-  <p>One model states what the decision rests on. Another attacks it. The review stops when a round adds nothing that would change the outcome. Then a fixed rule, not a model, returns <b>ACT</b>, <b>WAIT</b>, or <b>ABANDON</b>.</p>
+  <p>One model states what the decision rests on. Another attacks it. The first answers with evidence from the record. A challenge that only says “unproven” cannot block; only contrary evidence can. The review stops when a round changes nothing. Then a fixed rule, not a model, returns <b>ACT</b>, <b>WAIT</b>, or <b>ABANDON</b>.</p>
   <div class="input-card">
     <textarea id="decision" placeholder="What decision are you trying to make?"></textarea>
-    <textarea id="context" class="context" placeholder="Optional context, constraints, or evidence"></textarea>
+    <textarea id="context" class="context" placeholder="Context: constraints, evidence, anything already known. This is the record the Builder may quote."></textarea>
     <div class="controls">
       <select id="mode"><option value="demo">Demo — fixed example, no API key</option><option value="live">Live — your decision, via LiteLLM</option></select>
       <input id="builderModel" placeholder="Builder model, e.g. openai/..." class="model hidden">
@@ -20,13 +20,14 @@
 </section>
 
 <section id="map" class="map hidden">
-  <div id="demoBanner" class="demo-banner hidden">DEMO — canned output for a fixed example. The ledger, stop rule, and gate below are the real code path.</div>
+  <div id="demoBanner" class="demo-banner hidden">DEMO — canned output for a fixed example. The materiality rule, evidence check, stop rule, and gate below are the real code path.</div>
 
   <div class="node"><span>DECISION</span><h2 id="decisionText"></h2><p id="contextText" class="muted"></p></div><div class="arrow">↓</div>
 
   <div class="node"><span>WHAT MUST BE TRUE</span><p class="muted">The Builder's claims. If one is false, the decision does not hold.</p><div id="claims" class="rows"></div></div><div class="arrow">↓</div>
 
-  <div class="node"><span>CHALLENGES</span><p class="muted">The Adversary's objections. Each is rated by what it does to the decision if it stays unresolved.</p>
+  <div class="node"><span>CHALLENGES AND ANSWERS</span>
+    <p class="muted">The Adversary's objections, each with a basis. A rule sets the rating the gate reads: missing evidence caps at MATERIAL, or at BLOCKING when the claim is a DEPENDENCY. Only contrary evidence can go higher. The Builder answers each one, and may resolve it only by quoting the context verbatim.</p>
     <div class="legend"><span class="pill fatal">FATAL</span> abandon &nbsp; <span class="pill blocking">BLOCKING</span> wait &nbsp; <span class="pill material">MATERIAL</span> act, carry as risk &nbsp; <span class="pill non_blocking">NON_BLOCKING</span> act, record</div>
     <div id="challenges" class="challenge-list"></div>
   </div><div class="arrow">↓</div>
@@ -41,6 +42,7 @@
     </table>
     <strong id="action"></strong>
     <p id="trigger"></p>
+    <div id="history" class="history hidden"></div>
     <div id="nextAction" class="next-action"></div>
     <button id="download" class="secondary hidden">Download ledger</button>
   </div>

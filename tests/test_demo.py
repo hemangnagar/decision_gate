@@ -18,20 +18,34 @@ class DemoScenarioTests(unittest.TestCase):
         self.assertEqual([r["new_challenges"] for r in ledger["review_rounds"]], [3, 0])
         self.assertIn("no new MATERIAL", ledger["termination"]["reason"])
 
-    def test_demo_waits_on_the_single_blocking_challenge(self):
-        ledger = self.run_demo()
-        self.assertEqual(ledger["commitment"]["action"], "WAIT")
-        self.assertEqual(ledger["commitment"]["matched_rule"], "UNRESOLVED_BLOCKING")
-        self.assertEqual(ledger["commitment"]["triggering_challenges"], ["CH-001"])
-        self.assertEqual(ledger["challenges"][0]["materiality"], "BLOCKING")
+    def test_missing_evidence_is_capped(self):
+        ch = {c["id"]: c for c in self.run_demo()["challenges"]}["CH-001"]
+        self.assertEqual((ch["requested_materiality"], ch["materiality"]), ("BLOCKING", "MATERIAL"))
+        self.assertEqual(ch["materiality_rule"], "MISSING_EVIDENCE_CAPPED")
+        self.assertEqual(ch["rebuttal"]["response"], "DISPUTED")
 
-    def test_demo_states_what_flips_the_gate(self):
-        after = self.run_demo()["commitment"]["if_triggers_resolved"]
-        self.assertEqual(after["action"], "ACT")
+    def test_builder_resolves_by_quoting_the_record(self):
+        ch = {c["id"]: c for c in self.run_demo()["challenges"]}["CH-002"]
+        self.assertEqual(ch["materiality"], "BLOCKING")  # a DEPENDENCY may be blocked by missing evidence
+        self.assertEqual(ch["status"], "RESOLVED")
+        self.assertEqual(ch["resolution"]["by"], "BUILDER")
+
+    def test_contrary_evidence_keeps_its_rating_and_is_conceded(self):
+        ch = {c["id"]: c for c in self.run_demo()["challenges"]}["CH-003"]
+        self.assertEqual(ch["basis"], "CONTRARY_EVIDENCE")
+        self.assertEqual(ch["materiality_rule"], "CONTRARY_EVIDENCE_AS_REQUESTED")
+        self.assertEqual(ch["rebuttal"]["response"], "CONCEDED")
+
+    def test_demo_acts_with_two_named_risks(self):
+        ledger = self.run_demo()
+        self.assertEqual(ledger["commitment"]["action"], "ACT")
+        self.assertEqual(ledger["commitment"]["matched_rule"], "NO_UNRESOLVED_FATAL_OR_BLOCKING")
         self.assertEqual(
-            after["accepted_risks"],
-            ["The bottleneck is asserted, not measured", "EHR vendor roadmaps are unknown"],
+            ledger["commitment"]["accepted_risks"],
+            ["The bottleneck is asserted, not measured", "A major EHR vendor is building the same thing"],
         )
+        self.assertEqual(ledger["review_rounds"][0]["capped_by_rule"], 1)
+        self.assertEqual(ledger["review_rounds"][0]["resolved_by_builder"], 1)
 
 
 class CounterfactualGateTests(unittest.TestCase):

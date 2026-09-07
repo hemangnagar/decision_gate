@@ -17,6 +17,8 @@
       "target_claim": "CL-001",
       "title": "Direct prior art covers the core thesis",
       "argument": "Existing systems already provide multi-agent debate, critic/reflection loops, and adversarial orchestration. The proposed generic framework does not establish a differentiated control lifecycle.",
+      "basis": "CONTRARY_EVIDENCE",
+      "evidence": "Existing systems already provide multi-agent debate, critic/reflection loops, and adversarial orchestration.",
       "materiality": "FATAL",
       "status": "UNRESOLVED",
       "resolves_if": "Demonstrate a materially different decision lifecycle or control mechanism that is not simply another debate/orchestration framework.",
@@ -39,8 +41,12 @@
   "commitment": {
     "action": "ABANDON",
     "matched_rule": "UNRESOLVED_FATAL",
-    "triggering_challenges": ["CH-001"],
-    "reasons": ["Fatal unresolved challenge: Direct prior art covers the core thesis"],
+    "triggering_challenges": [
+      "CH-001"
+    ],
+    "reasons": [
+      "Fatal unresolved challenge: Direct prior art covers the core thesis"
+    ],
     "accepted_risks": [],
     "gate": "deterministic-v1",
     "committed_at": "2026-09-05T12:25:00-04:00"
