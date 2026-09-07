@@ -23,7 +23,8 @@ class _Adversary:
         self.calls += 1
         if self.calls == 1:
             return {"challenges": [
-                {"target_claim": "CL-001", "title": "No survey", "argument": "x", "materiality": "BLOCKING"},
+                {"target_claim": "CL-001", "title": "No survey", "argument": "x", "materiality": "BLOCKING",
+                 "basis": "CONTRARY_EVIDENCE", "evidence": "The one survey run showed no demand"},
                 {"target_claim": "CL-002", "title": "Typo", "argument": "y", "materiality": "NON_BLOCKING"},
             ]}
         return {"challenges": []}

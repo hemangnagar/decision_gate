@@ -29,6 +29,8 @@ class StubAdversary:
                     "title": "Feasibility unproven",
                     "argument": "No feasibility proof is present",
                     "materiality": self.materiality,
+                    "basis": "CONTRARY_EVIDENCE",
+                    "evidence": "The last two attempts at this ran out of budget before completion",
                     "resolves_if": "Run a small feasibility test",
                 }
             ]

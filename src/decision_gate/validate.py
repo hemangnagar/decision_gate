@@ -4,6 +4,7 @@ from typing import Any
 VALID_ACTIONS = {"ACT", "WAIT", "ABANDON"}
 VALID_MATERIALITY = {"FATAL", "BLOCKING", "MATERIAL", "NON_BLOCKING"}
 VALID_STATUS = {"SUPPORTED", "REFUTED", "REVISED", "CONTESTED", "INSUFFICIENT_EVIDENCE", "UNRESOLVED", "RESOLVED"}
+VALID_BASIS = {"MISSING_EVIDENCE", "CONTRARY_EVIDENCE"}
 
 
 def validate_ledger(ledger: dict[str, Any]) -> list[str]:
@@ -27,6 +28,10 @@ def validate_ledger(ledger: dict[str, Any]) -> list[str]:
             errors.append(f"Challenge {challenge.get('id')} has invalid status")
         if challenge.get("status") == "UNRESOLVED" and not challenge.get("resolves_if"):
             errors.append(f"Unresolved challenge {challenge.get('id')} must include resolves_if")
+        if "basis" in challenge and challenge.get("basis") not in VALID_BASIS:
+            errors.append(f"Challenge {challenge.get('id')} has invalid basis")
+        if challenge.get("basis") == "CONTRARY_EVIDENCE" and not str(challenge.get("evidence") or "").strip():
+            errors.append(f"Challenge {challenge.get('id')} claims contrary evidence but states none")
 
     action = ledger.get("commitment", {}).get("action")
     if action is not None and action not in VALID_ACTIONS:

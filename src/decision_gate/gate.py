@@ -5,6 +5,44 @@ from typing import Any
 
 TERMINAL = {"ACT", "WAIT", "ABANDON"}
 MATERIALITIES = {"FATAL", "BLOCKING", "MATERIAL", "NON_BLOCKING"}
+MATERIALITY_RANK = {"NON_BLOCKING": 0, "MATERIAL": 1, "BLOCKING": 2, "FATAL": 3}
+BASES = {"MISSING_EVIDENCE", "CONTRARY_EVIDENCE"}
+
+
+@dataclass(frozen=True)
+class MaterialityResult:
+    materiality: str
+    basis: str
+    rule: str
+    cap: str | None
+
+
+def assign_materiality(
+    *,
+    requested: str,
+    basis: str | None,
+    claim_kind: str,
+    evidence: str | None,
+) -> MaterialityResult:
+    """Deterministic materiality. The Adversary proposes; this rule disposes.
+
+    A challenge that only says a claim is unproven (MISSING_EVIDENCE) cannot
+    block or kill a decision by itself. It caps at MATERIAL, or at BLOCKING
+    when the target claim is a DEPENDENCY, since an unmet precondition is a
+    legitimate reason to wait. Only a challenge that states contrary evidence
+    keeps the materiality it asked for. A challenge that claims contrary
+    evidence but states none is treated as missing evidence.
+    """
+    requested = requested if requested in MATERIALITY_RANK else "MATERIAL"
+    basis = basis if basis in BASES else "MISSING_EVIDENCE"
+    if basis == "CONTRARY_EVIDENCE" and not (evidence or "").strip():
+        basis = "MISSING_EVIDENCE"
+    if basis == "CONTRARY_EVIDENCE":
+        return MaterialityResult(requested, basis, "CONTRARY_EVIDENCE_AS_REQUESTED", None)
+    cap = "BLOCKING" if claim_kind == "DEPENDENCY" else "MATERIAL"
+    if MATERIALITY_RANK[requested] > MATERIALITY_RANK[cap]:
+        return MaterialityResult(cap, basis, "MISSING_EVIDENCE_CAPPED", cap)
+    return MaterialityResult(requested, basis, "MISSING_EVIDENCE_WITHIN_CAP", cap)
 
 
 @dataclass(frozen=True)
