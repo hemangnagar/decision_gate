@@ -13,10 +13,12 @@ Context (evidence already on the record):
 Claims:
 {claims_json}
 
-Existing challenges:
+Existing challenges (each may carry a Builder "rebuttal"):
 {challenges_json}
 
-Find only NEW challenges. Do not raise a challenge the context already answers; if the context answers part of one, say exactly what is still missing. For each challenge, target one claim, state its basis, and propose its decision impact.
+Reply to disputes first. For each existing challenge whose rebuttal has response DISPUTED, either keep it (say nothing) or withdraw it by listing it under "withdraw" with a reason. Withdraw only if the Builder's argument is right; do not withdraw to be agreeable.
+
+Then find only NEW challenges. Do not raise a challenge the context already answers; if the context answers part of one, say exactly what is still missing. For each challenge, target one claim, state its basis, and propose its decision impact.
 
 basis:
 - CONTRARY_EVIDENCE: you can state something specific that makes the claim false or unlikely (a fact, a mechanism, a number, a precedent). Put that in "evidence".
@@ -29,6 +31,9 @@ A fixed rule caps MISSING_EVIDENCE challenges at MATERIAL, or at BLOCKING when t
 
 Return exactly this JSON shape:
 {{
+  "withdraw": [
+    {{"challenge": "CH-001", "reason": "why the dispute is right"}}
+  ],
   "challenges": [
     {{
       "target_claim": "CL-001",
@@ -42,4 +47,35 @@ Return exactly this JSON shape:
   ]
 }}
 
-If there is no genuinely new MATERIAL/BLOCKING/FATAL challenge, return {{"challenges": []}}."""
+If there is no genuinely new MATERIAL/BLOCKING/FATAL challenge, return {{"withdraw": [], "challenges": []}}."""
+
+REBUTTAL_SYSTEM = """You are the Builder in Decision Gate, answering the Adversary. You may resolve a challenge only by quoting evidence that is already in the context, verbatim. Never invent evidence. If the context does not answer a challenge, dispute it on the argument or concede it. Return JSON only."""
+
+REBUTTAL_PROMPT = """Decision:
+{decision}
+
+Context (the only evidence you may quote):
+{context}
+
+Claims:
+{claims_json}
+
+Open challenges:
+{challenges_json}
+
+Answer each open challenge with one of:
+- RESOLVED: the context already answers it. "evidence" must be an exact quote from the context, at least a full clause. A quote that is not in the context is rejected and the response is recorded as DISPUTED.
+- DISPUTED: the challenge is wrong or overstated on the argument. Say why in "argument". A dispute does not change the challenge's materiality; the Adversary may withdraw the challenge next round, and a human may resolve it later with evidence.
+- CONCEDED: the challenge stands as stated.
+
+Return exactly this JSON shape:
+{{
+  "responses": [
+    {{
+      "challenge": "CH-001",
+      "response": "RESOLVED|DISPUTED|CONCEDED",
+      "evidence": "exact quote from the context, or empty",
+      "argument": "one or two sentences"
+    }}
+  ]
+}}"""

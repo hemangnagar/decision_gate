@@ -44,11 +44,14 @@ class ProgressTests(unittest.TestCase):
         self.assertEqual(lines[1], "builder: 2 claims")
         self.assertEqual(lines[2], "round 1/3 (fake/adversary): adversary reviewing...")
         self.assertEqual(lines[3], "round 1: 2 new challenges (1 BLOCKING, 1 NON_BLOCKING)")
-        self.assertEqual(lines[4], "round 2/3 (fake/adversary): adversary reviewing...")
-        self.assertEqual(lines[5], "round 2: 0 new challenges (nothing new)")
-        self.assertTrue(lines[6].startswith("stopping: "))
-        self.assertTrue(lines[7].startswith("gate: WAIT"))
-        self.assertEqual(len(lines), 8)
+        self.assertEqual(lines[4], "round 1 (fake/builder): builder answering 2 challenges...")
+        # The stub Builder returns claims, not responses, so both challenges go unanswered.
+        self.assertEqual(lines[5], "round 1: builder resolved 0, disputed 0, conceded 0, 2 unanswered")
+        self.assertEqual(lines[6], "round 2/3 (fake/adversary): adversary reviewing...")
+        self.assertEqual(lines[7], "round 2: 0 new challenges (nothing new)")
+        self.assertTrue(lines[8].startswith("stopping: "))
+        self.assertTrue(lines[9].startswith("gate: WAIT"))
+        self.assertEqual(len(lines), 10)
         # The callback is observational only: same claims, challenges and verdict either way.
         strip = lambda rows: [{k: v for k, v in r.items() if k != "completed_at"} for r in rows]
         for key in ("claims", "challenges", "review_rounds"):
