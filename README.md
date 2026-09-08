@@ -11,6 +11,18 @@ An open-source adversarial decision system. Two models argue about a decision. A
 
 The key question is not "have we eliminated every objection?" It is "do we know enough to take the next action responsibly?"
 
+## What's new in 0.3
+
+Version 0.2 had a prosecutor and no defence: the Adversary rated its own objections, most of them said only that a claim was unproven, nothing inside a run could resolve one, and the four live runs never reached ACT. Version 0.3 makes the burden of proof symmetric.
+
+- **Missing evidence cannot block.** A rule caps a challenge that only says "unproven" at MATERIAL (BLOCKING for a DEPENDENCY). Only stated contrary evidence can go higher.
+- **The Adversary sees the context**, so evidence already on the record pre-empts a challenge.
+- **The Builder gets a turn.** It answers every challenge once and can resolve one only by quoting the context verbatim; the quote is checked. The Adversary may withdraw a disputed challenge.
+- **Humans resolve with evidence**, in the CLI or the UI, and the gate runs again with the old commitment kept in history.
+- **Scoring cuts both ways**: harsh ratings that never materialised are flagged, not only lenient ones that did.
+
+Details in [Burden of proof](#burden-of-proof). The four live runs in `data/decisions` predate these rules and are kept unedited as the evidence they came from.
+
 ![The gate on a live run: ABANDON, triggered by CH-001, with the resolves_if that would move it to WAIT](docs/screenshots/003-hospital-gate.png)
 
 *A live run, unedited: Claude Opus 5 as Builder and Adversary on "should a 300-bed hospital replace pagers with a messaging app within 12 months?" One FATAL challenge fires the rule. The ledger says what would change the answer, and that even then the answer is WAIT. [Four such runs are annotated here.](data/decisions/README.md)*
@@ -95,6 +107,12 @@ An absent basis, or contrary evidence with nothing stated, is missing evidence. 
 **The Builder answers, but can only resolve with words that are on the record.** After each Adversary round the Builder responds to every open challenge once: RESOLVED with a verbatim quote from the context, DISPUTED with an argument, or CONCEDED. The runner checks the quote against the context; one that is not there is recorded as DISPUTED with the rejection noted. A verified quote flips the challenge to RESOLVED and out of the gate's view. A dispute changes nothing the gate reads, but the Adversary sees it next round and may withdraw the challenge with a reason.
 
 **Humans close challenges with evidence, and the scorer grades both directions.** `decision-gate resolve` appends evidence to the ledger, marks the challenge RESOLVED by HUMAN, keeps the previous commitment in `commitment_history`, and re-runs the gate. Outcome scoring flags challenges rated too low that came true *and* BLOCKING or FATAL challenges that never materialised, so calibration can move toward leniency as well as toward severity.
+
+![The demo's challenge card: CH-001 capped from BLOCKING to MATERIAL for missing evidence and disputed by the Builder; CH-002 resolved by the Builder quoting the context; CH-003 rated on contrary evidence and conceded](docs/screenshots/demo-challenges-and-answers.png)
+
+*The demo's three challenges. The first asked for BLOCKING and was capped to MATERIAL because it only said the claim was unmeasured. The second is a DEPENDENCY, so missing evidence could block it, but the Builder resolved it by quoting the context and the quote was verified. The third brought contrary evidence, kept its rating, and was conceded.*
+
+![The gate on the demo: ACT, carrying the two open challenges as named accepted risks, with CH-002 retired on the record](docs/screenshots/demo-gate-act.png)
 
 Why this exists: the four unedited live runs in `data/decisions` produced 92 challenges, 44 of them BLOCKING and none NON_BLOCKING, most of them saying only that a claim was unmeasured, and no path inside a run for a claim to be vindicated. The Adversary set the severity of its own objections and there was no defence. With those rules a review always ends WAIT, whatever the decision. The changes above are the defence.
 
