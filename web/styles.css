@@ -29,3 +29,9 @@ textarea[readonly]{background:#fbfbfc;color:#374151}
 button.small{min-height:40px;padding:0 14px;font-size:13px}
 .history{margin:0 auto 10px;max-width:650px;color:#6b7280;font-size:13px}
 @media(max-width:760px){.resolve{grid-template-columns:1fr}}
+.open{display:block;margin-top:8px}
+.open input{font:inherit;font-size:13px;margin-left:6px}
+.file-banner{margin-bottom:18px;padding:10px 14px;border-radius:10px;background:#e0f2fe;color:#075985;font-weight:650;font-size:13px;letter-spacing:.02em}
+.tally{margin-top:14px;padding:12px 14px;background:#f9fafb;border-radius:12px;line-height:1.7;color:#374151}
+.tally .k{color:#6b7280;font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;margin-right:6px}
+.tally .moves{color:#166534}

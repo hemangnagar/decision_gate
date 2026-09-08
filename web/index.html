@@ -15,12 +15,14 @@
       <button id="review">Run the review</button>
     </div>
     <div id="modeNote" class="hint">Demo replays one worked example with canned Builder and Adversary output. No model is called. Switch to Live to review your own decision.</div>
+    <label class="open hint">Or open a saved ledger: <input type="file" id="openLedger" accept=".json,application/json"></label>
     <div id="error" class="error hidden"></div>
   </div>
 </section>
 
 <section id="map" class="map hidden">
   <div id="demoBanner" class="demo-banner hidden">DEMO — canned output for a fixed example. The materiality rule, evidence check, stop rule, and gate below are the real code path.</div>
+  <div id="fileBanner" class="file-banner hidden"></div>
 
   <div class="node"><span>DECISION</span><h2 id="decisionText"></h2><p id="contextText" class="muted"></p></div><div class="arrow">↓</div>
 
@@ -29,6 +31,7 @@
   <div class="node"><span>CHALLENGES AND ANSWERS</span>
     <p class="muted">The Adversary's objections, each with a basis. A rule sets the rating the gate reads: missing evidence caps at MATERIAL, or at BLOCKING when the claim is a DEPENDENCY. Only contrary evidence can go higher. The Builder answers each one, and may resolve it only by quoting the context verbatim.</p>
     <div class="legend"><span class="pill fatal">FATAL</span> abandon &nbsp; <span class="pill blocking">BLOCKING</span> wait &nbsp; <span class="pill material">MATERIAL</span> act, carry as risk &nbsp; <span class="pill non_blocking">NON_BLOCKING</span> act, record</div>
+    <div id="tally" class="tally"></div>
     <div id="challenges" class="challenge-list"></div>
   </div><div class="arrow">↓</div>
 

@@ -8,6 +8,7 @@ from pathlib import Path
 from .gate import evaluate_gate, evaluate_if_resolved, should_stop
 from .lifecycle import check_reopen, resolve_challenge, score_outcomes
 from .providers import LiteLLMProvider
+from .report import format_comparison, summarize_file
 from .runner import run_review
 from .validate import validate_ledger
 
@@ -47,6 +48,9 @@ def main() -> None:
     sc.add_argument("ledger")
     sc.add_argument("outcomes")
 
+    cmp = s.add_parser("compare", help="one row per ledger: what the Adversary asked for, what stood, and the gate")
+    cmp.add_argument("ledgers", nargs="+")
+
     args = p.parse_args()
 
     if args.cmd == "review":
@@ -80,6 +84,10 @@ def main() -> None:
         print(f"RESOLVED {args.challenge}")
         print(f"Gate: {before} -> {ledger['commitment']['action']} ({ledger['commitment']['matched_rule']})")
         print(out)
+        return
+
+    if args.cmd == "compare":
+        print(format_comparison([summarize_file(path) for path in args.ledgers]))
         return
 
     if args.cmd == "score":

@@ -199,6 +199,8 @@ The canned Adversary raises one challenge the context already answers. That is d
 
 Switch to **Live** to review your own decision with real models.
 
+**Open a saved ledger.** The file picker under the mode selector renders any ledger JSON, including the live runs in `data/decisions`, without re-running anything. Above the challenge list a tally shows what the Adversary asked for and what is still standing after the rule and the Builder's answers; for a ledger written before the rule it says so. Two browser tabs give you a 0.2 run and its 0.3 re-run side by side.
+
 ## Run with real models
 
 Decision Gate uses [LiteLLM](https://docs.litellm.ai/) as a provider-neutral adapter.
@@ -332,6 +334,20 @@ decision.json
 ```
 
 The evidence is appended to the ledger's `evidence` list, the challenge records who resolved it and with what, and the previous commitment moves to `commitment_history`.
+
+Compare ledgers, one row each, to see whether the defence did any work:
+
+```bash
+decision-gate compare data/decisions/004-spark-to-duckdb.json runs/004-rerun-with-context.json
+```
+
+```text
+ledger                          ctx  chal  asked F/B/M/N  open F/B/M/N  capped  resolved  withdrawn  gate      if resolved
+004-spark-to-duckdb.json*       no   22    0/9/13/0       0/9/13/0      0       0b 0h     0          WAIT (9)  ACT
+004-rerun-with-context.json     yes  ...
+```
+
+Counts are FATAL/BLOCKING/MATERIAL/NON_BLOCKING. `asked` is what the Adversary requested, `open` is what still stands after the materiality rule and the Builder's answers. A starred ledger predates the rule.
 
 Check whether new evidence is allowed to reopen a closed review:
 

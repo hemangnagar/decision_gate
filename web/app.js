@@ -23,6 +23,56 @@ applyMode();
 
 const titleOf = (ledger, id) => (ledger.challenges.find(c => c.id === id) || {}).title || id;
 
+const ORDER = ['FATAL', 'BLOCKING', 'MATERIAL', 'NON_BLOCKING'];
+function tally(ledger) {
+  const asked = {}, open = {};
+  ORDER.forEach(m => { asked[m] = 0; open[m] = 0; });
+  let legacy = ledger.challenges.length > 0, capped = 0, byBuilder = 0, byHuman = 0, withdrawn = 0;
+  ledger.challenges.forEach(c => {
+    if ('requested_materiality' in c) legacy = false;
+    const r = c.requested_materiality || c.materiality;
+    if (r in asked) asked[r]++;
+    if (c.status === 'UNRESOLVED' && c.materiality in open) open[c.materiality]++;
+    if (c.materiality_rule === 'MISSING_EVIDENCE_CAPPED') capped++;
+    if (c.status === 'RESOLVED') { if (c.resolution?.by === 'HUMAN') byHuman++; else byBuilder++; }
+    if (c.status === 'WITHDRAWN') withdrawn++;
+  });
+  const fmt = o => ORDER.filter(m => o[m]).map(m => `<b>${o[m]}</b> ${esc(m.replace('_', ' '))}`).join(', ') || 'none';
+  if (!ledger.challenges.length) return '';
+  if (legacy) {
+    return `<div><span class="k">Adversary rated</span> ${fmt(asked)}. This ledger predates the materiality rule, so those ratings are what the gate read.</div>`;
+  }
+  const moves = [];
+  if (capped) moves.push(`${capped} capped by rule`);
+  if (byBuilder) moves.push(`${byBuilder} resolved by the Builder`);
+  if (byHuman) moves.push(`${byHuman} resolved by you`);
+  if (withdrawn) moves.push(`${withdrawn} withdrawn`);
+  return `<div><span class="k">Adversary asked for</span> ${fmt(asked)}.</div>
+    <div><span class="k">Standing after the rule and the answers</span> ${fmt(open)} open${moves.length ? ` <span class="moves">· ${moves.join(' · ')}</span>` : ''}.</div>`;
+}
+
+function openLedgerFile(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const ledger = JSON.parse(reader.result);
+      if (!Array.isArray(ledger.claims) || !Array.isArray(ledger.challenges) || !ledger.commitment) {
+        throw new Error('Not a Decision Gate ledger: expected claims, challenges, and a commitment.');
+      }
+      ledger.mode = 'file';
+      ledger.source_file = file.name;
+      $('error').classList.add('hidden');
+      render(ledger);
+      $('map').scrollIntoView({behavior: 'smooth'});
+    } catch (err) {
+      $('error').textContent = `Could not open ${file.name}: ${err.message}`;
+      $('error').classList.remove('hidden');
+    }
+  };
+  reader.readAsText(file);
+}
+$('openLedger').onchange = ev => { if (ev.target.files[0]) openLedgerFile(ev.target.files[0]); ev.target.value = ''; };
+
 function ratingLine(c) {
   if (c.materiality_rule === 'MISSING_EVIDENCE_CAPPED') {
     return `<p class="rule-note"><b>Basis:</b> missing evidence. The Adversary asked for ${esc(c.requested_materiality)}; the rule capped it at ${esc(c.materiality)} because a claim that is merely unproven cannot ${c.materiality === 'MATERIAL' ? 'block' : 'kill'} the decision.</p>`;
@@ -58,12 +108,15 @@ function resolveForm(c) {
 function render(ledger) {
   currentLedger = ledger;
   $('demoBanner').classList.toggle('hidden', ledger.mode !== 'demo');
+  $('fileBanner').classList.toggle('hidden', ledger.mode !== 'file');
+  if (ledger.mode === 'file') $('fileBanner').textContent = `OPENED FROM FILE — ${ledger.source_file || 'ledger'} (${ledger.id || 'no id'}). Nothing was re-run. Resolving a challenge below posts to the local server and re-gates.`;
   $('decisionText').textContent = ledger.decision;
   $('contextText').textContent = ledger.context || '';
 
   $('claims').innerHTML = ledger.claims.map(c =>
     `<div><b>${esc(c.id)}</b> ${esc(c.title)} <em class="kind">${esc(c.kind)}</em><small>${esc(c.statement)}</small></div>`).join('');
 
+  $('tally').innerHTML = tally(ledger);
   $('challenges').innerHTML = ledger.challenges.map(c => {
     const status = c.status === 'UNRESOLVED' ? '' : `<span class="status ${esc(c.status.toLowerCase())}">${esc(c.status)}</span>`;
     return `

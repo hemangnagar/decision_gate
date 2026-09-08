@@ -185,3 +185,48 @@ decision-gate review "Your decision as a yes/no question" \
 Progress prints to stderr while the run is in flight. Wall time for these
 four was four to five minutes each. Nothing in this repository calls a model
 on anyone's behalf but the person running the command.
+
+## Re-running under the burden-of-proof rules
+
+The four runs above were made before the materiality rule and the Builder's
+rebuttal turn. The next experiment is to re-run each decision twice and
+compare the pair, because the question is not "does it say ACT now" but
+"does the answer depend on the evidence supplied". A version that says ACT
+without a record is as broken as one that never does.
+
+```bash
+mkdir -p runs
+# 1. Same decision, no record: the cap alone is at work.
+decision-gate review "Should a data team migrate its nightly Spark batch jobs (2 TB/day) to DuckDB on a single large machine?" \
+  --builder-model anthropic/claude-opus-5 --adversary-model anthropic/claude-opus-5 \
+  --out runs/004-no-context.json
+
+# 2. Same decision, with a record that answers some of the old blockers.
+decision-gate review "Should a data team migrate its nightly Spark batch jobs (2 TB/day) to DuckDB on a single large machine?" \
+  --context "$(cat runs/004-context.txt)" \
+  --builder-model anthropic/claude-opus-5 --adversary-model anthropic/claude-opus-5 \
+  --out runs/004-with-context.json
+
+# 3. One row each: what was asked, what stood, what the gate said.
+decision-gate compare data/decisions/004-spark-to-duckdb.json runs/004-no-context.json runs/004-with-context.json
+```
+
+Write `runs/004-context.txt` as the record a real team would have: measured
+bytes read per night, the UDF inventory, the instance SKU and its NVMe
+throughput, whatever is actually known. The Builder can only resolve a
+challenge by quoting that file verbatim, so specifics matter and vague
+reassurance does nothing.
+
+What to look for in the compare table:
+
+- **No-context run.** `capped` should be well above zero and `open` BLOCKING
+  well below `asked` BLOCKING, since most old blockers only said a claim was
+  unmeasured. The gate should still be WAIT if any DEPENDENCY claim is
+  unevidenced. If it is ACT with no record at all, the cap is too generous.
+- **With-context run.** `resolved` should be non-zero and the gate should
+  move, to ACT or to WAIT on fewer, better-grounded blockers. Open each
+  resolution in the UI and check the quoted evidence really answers the
+  challenge; the runner verifies the quote is in the record, not that it is
+  relevant.
+- **Both.** `contrary_evidence` challenges are the ones that earned their
+  rating. Read them; they are the review.
