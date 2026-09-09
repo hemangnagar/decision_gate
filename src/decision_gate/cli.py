@@ -5,9 +5,11 @@ import json
 import sys
 from pathlib import Path
 
+from .env import load_dotenv
 from .gate import evaluate_gate, evaluate_if_resolved, should_stop
-from .lifecycle import check_reopen, score_outcomes
+from .lifecycle import check_reopen, resolve_challenge, score_outcomes
 from .providers import LiteLLMProvider
+from .report import format_comparison, summarize_file
 from .runner import run_review
 from .validate import validate_ledger
 
@@ -17,6 +19,7 @@ def load(path: str):
 
 
 def main() -> None:
+    load_dotenv()
     p = argparse.ArgumentParser(prog="decision-gate")
     s = p.add_subparsers(dest="cmd", required=True)
     v = s.add_parser("validate"); v.add_argument("ledger")
@@ -25,7 +28,8 @@ def main() -> None:
 
     r = s.add_parser("review")
     r.add_argument("decision")
-    r.add_argument("--context", default="")
+    r.add_argument("--context", default="", help="the record: constraints and evidence the Builder may quote")
+    r.add_argument("--context-file", help="read the record from a UTF-8 text file instead (works on any shell)")
     r.add_argument("--builder-model", required=True)
     r.add_argument("--adversary-model", required=True)
     r.add_argument("--max-rounds", type=int, default=3)
@@ -37,16 +41,28 @@ def main() -> None:
     ro.add_argument("--trigger", required=True, choices=["NEW_EVIDENCE", "DEPENDENCY_CHANGED", "OUTCOME_CONTRADICTION", "USER_EXPLICIT"])
     ro.add_argument("--challenge")
 
+    rs = s.add_parser("resolve", help="close a challenge with evidence and re-run the gate")
+    rs.add_argument("ledger")
+    rs.add_argument("--challenge", required=True)
+    rs.add_argument("--evidence", required=True)
+    rs.add_argument("--out", help="write the updated ledger here (default: overwrite the input)")
+
     sc = s.add_parser("score")
     sc.add_argument("ledger")
     sc.add_argument("outcomes")
 
+    cmp = s.add_parser("compare", help="one row per ledger: what the Adversary asked for, what stood, and the gate")
+    cmp.add_argument("ledgers", nargs="+")
+
     args = p.parse_args()
 
     if args.cmd == "review":
+        context = args.context
+        if args.context_file:
+            context = Path(args.context_file).read_text(encoding="utf-8")
         ledger = run_review(
             decision=args.decision,
-            context=args.context,
+            context=context,
             builder=LiteLLMProvider(args.builder_model),
             adversary=LiteLLMProvider(args.adversary_model),
             max_rounds=args.max_rounds,
@@ -64,6 +80,20 @@ def main() -> None:
         ok, reason = check_reopen(load(args.ledger), trigger=args.trigger, challenge_id=args.challenge)
         print("REOPEN" if ok else "KEEP_CLOSED")
         print(reason)
+        return
+
+    if args.cmd == "resolve":
+        ledger = resolve_challenge(load(args.ledger), challenge_id=args.challenge, evidence=args.evidence)
+        out = args.out or args.ledger
+        Path(out).write_text(json.dumps(ledger, indent=2))
+        before = (ledger.get("commitment_history") or [{}])[-1].get("action", "?")
+        print(f"RESOLVED {args.challenge}")
+        print(f"Gate: {before} -> {ledger['commitment']['action']} ({ledger['commitment']['matched_rule']})")
+        print(out)
+        return
+
+    if args.cmd == "compare":
+        print(format_comparison([summarize_file(path) for path in args.ledgers]))
         return
 
     if args.cmd == "score":

@@ -4,10 +4,11 @@ import json
 from datetime import datetime, timezone
 from typing import Any, Callable
 
-from .gate import evaluate_gate, evaluate_if_resolved, should_stop
-from .prompts import ADVERSARY_PROMPT, ADVERSARY_SYSTEM, BUILDER_PROMPT, BUILDER_SYSTEM
+from .gate import MATERIALITY_RANK, assign_materiality, should_stop
+from .lifecycle import build_commitment
+from .prompts import ADVERSARY_PROMPT, ADVERSARY_SYSTEM, BUILDER_PROMPT, BUILDER_SYSTEM, REBUTTAL_PROMPT, REBUTTAL_SYSTEM
 from .providers import Provider
-from .validate import VALID_MATERIALITY
+from .rebuttal import apply_rebuttals, apply_withdrawals
 
 
 def _now() -> str:
@@ -79,30 +80,41 @@ def run_review(
             system=ADVERSARY_SYSTEM,
             prompt=ADVERSARY_PROMPT.format(
                 decision=ledger["decision"],
+                context=ledger["context"] or "(none)",
                 claims_json=json.dumps(ledger["claims"], indent=2),
                 challenges_json=json.dumps(ledger["challenges"], indent=2),
             ),
         )
+        withdrawn = apply_withdrawals(ledger, list(result.get("withdraw") or []), round_no)
         new_challenges: list[dict[str, Any]] = []
         seen = {(c.get("target_claim"), str(c.get("title", "")).lower()) for c in ledger["challenges"]}
-        claim_ids = {c["id"] for c in ledger["claims"]}
+        claim_kinds = {c["id"]: c["kind"] for c in ledger["claims"]}
 
         for raw in list(result.get("challenges") or []):
             target = raw.get("target_claim")
             title = str(raw.get("title") or "Untitled challenge").strip()
-            materiality = str(raw.get("materiality") or "MATERIAL").upper()
             key = (target, title.lower())
-            if target not in claim_ids or key in seen:
+            if target not in claim_kinds or key in seen:
                 continue
-            if materiality not in VALID_MATERIALITY:
-                materiality = "MATERIAL"
+            requested = str(raw.get("materiality") or "MATERIAL").upper()
+            evidence = str(raw.get("evidence") or "").strip()
+            rated = assign_materiality(
+                requested=requested,
+                basis=str(raw.get("basis") or "").upper() or None,
+                claim_kind=claim_kinds[target],
+                evidence=evidence,
+            )
             challenge_counter += 1
             challenge = {
                 "id": f"CH-{challenge_counter:03d}",
                 "target_claim": target,
                 "title": title,
                 "argument": str(raw.get("argument") or ""),
-                "materiality": materiality,
+                "basis": rated.basis,
+                "evidence": evidence if rated.basis == "CONTRARY_EVIDENCE" else "",
+                "requested_materiality": requested if requested in MATERIALITY_RANK else "MATERIAL",
+                "materiality": rated.materiality,
+                "materiality_rule": rated.rule,
                 "status": "UNRESOLVED",
                 "resolves_if": str(raw.get("resolves_if") or "Provide evidence sufficient to resolve this challenge."),
                 "raised_in_round": round_no,
@@ -112,19 +124,52 @@ def run_review(
 
         ledger["challenges"].extend(new_challenges)
         consequential = sum(c["materiality"] in {"FATAL", "BLOCKING", "MATERIAL"} for c in new_challenges)
+        capped = sum(c["materiality_rule"] == "MISSING_EVIDENCE_CAPPED" for c in new_challenges)
+        tally = ", ".join(
+            f"{n} {m}" for m in ("FATAL", "BLOCKING", "MATERIAL", "NON_BLOCKING")
+            if (n := sum(c["materiality"] == m for c in new_challenges))
+        ) or "nothing new"
+        say(
+            f"round {round_no}: {len(new_challenges)} new challenges ({tally})"
+            + (f", {capped} capped by rule" if capped else "")
+            + (f", {withdrawn} withdrawn" if withdrawn else "")
+        )
+
+        # The Builder answers every open challenge once, with evidence from the record or not at all.
+        open_challenges = [c for c in ledger["challenges"] if c["status"] == "UNRESOLVED" and "rebuttal" not in c]
+        answered = {"resolved": 0, "disputed": 0, "conceded": 0, "unverified": 0, "unanswered": 0}
+        if open_challenges:
+            say(f"round {round_no} ({getattr(builder, 'model', '?')}): builder answering {len(open_challenges)} challenges...")
+            reply = builder.generate_json(
+                system=REBUTTAL_SYSTEM,
+                prompt=REBUTTAL_PROMPT.format(
+                    decision=ledger["decision"],
+                    context=ledger["context"] or "(none)",
+                    claims_json=json.dumps(ledger["claims"], indent=2),
+                    challenges_json=json.dumps(open_challenges, indent=2),
+                ),
+            )
+            answered = apply_rebuttals(ledger, list(reply.get("responses") or []), round_no)
+            say(
+                f"round {round_no}: builder resolved {answered['resolved']}, disputed {answered['disputed']}, "
+                f"conceded {answered['conceded']}"
+                + (f", {answered['unverified']} unverified quotes rejected" if answered["unverified"] else "")
+                + (f", {answered['unanswered']} unanswered" if answered["unanswered"] else "")
+            )
+
         ledger["review_rounds"].append(
             {
                 "round": round_no,
                 "new_challenges": len(new_challenges),
                 "new_material_or_blocking": consequential,
+                "capped_by_rule": capped,
+                "resolved_by_builder": answered["resolved"],
+                "disputed": answered["disputed"],
+                "conceded": answered["conceded"],
+                "withdrawn": withdrawn,
                 "completed_at": _now(),
             }
         )
-        tally = ", ".join(
-            f"{n} {m}" for m in ("FATAL", "BLOCKING", "MATERIAL", "NON_BLOCKING")
-            if (n := sum(c["materiality"] == m for c in new_challenges))
-        ) or "nothing new"
-        say(f"round {round_no}: {len(new_challenges)} new challenges ({tally})")
         stop, reason = should_stop(ledger["review_rounds"], max_rounds=max_rounds)
         if stop:
             ledger["termination"] = {"reason": reason, "round": round_no, "closed_at": _now()}
@@ -134,23 +179,6 @@ def run_review(
     if "termination" not in ledger:
         ledger["termination"] = {"reason": "Review policy completed.", "round": len(ledger["review_rounds"]), "closed_at": _now()}
 
-    gate = evaluate_gate(ledger)
-    ledger["commitment"] = {
-        "action": gate.action,
-        "matched_rule": gate.matched_rule,
-        "triggering_challenges": gate.triggering_challenges,
-        "reasons": gate.reasons,
-        "accepted_risks": gate.accepted_risks,
-        "committed_at": _now(),
-        "gate": "deterministic-v1",
-    }
-    say(f"gate: {gate.action} ({gate.matched_rule})")
-    if gate.triggering_challenges:
-        after = evaluate_if_resolved(ledger, gate.triggering_challenges)
-        ledger["commitment"]["if_triggers_resolved"] = {
-            "action": after.action,
-            "matched_rule": after.matched_rule,
-            "triggering_challenges": after.triggering_challenges,
-            "accepted_risks": after.accepted_risks,
-        }
+    ledger["commitment"] = build_commitment(ledger)
+    say(f"gate: {ledger['commitment']['action']} ({ledger['commitment']['matched_rule']})")
     return ledger

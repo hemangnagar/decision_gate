@@ -1,8 +1,72 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Any
 
+from .gate import evaluate_gate, evaluate_if_resolved
+
 REOPEN_TRIGGERS = {"NEW_EVIDENCE", "DEPENDENCY_CHANGED", "OUTCOME_CONTRADICTION", "USER_EXPLICIT"}
+
+
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def build_commitment(ledger: dict[str, Any]) -> dict[str, Any]:
+    """Run the gate on the ledger as it stands and return the commitment record."""
+    gate = evaluate_gate(ledger)
+    commitment: dict[str, Any] = {
+        "action": gate.action,
+        "matched_rule": gate.matched_rule,
+        "triggering_challenges": gate.triggering_challenges,
+        "reasons": gate.reasons,
+        "accepted_risks": gate.accepted_risks,
+        "committed_at": _now(),
+        "gate": "deterministic-v1",
+    }
+    if gate.triggering_challenges:
+        after = evaluate_if_resolved(ledger, gate.triggering_challenges)
+        commitment["if_triggers_resolved"] = {
+            "action": after.action,
+            "matched_rule": after.matched_rule,
+            "triggering_challenges": after.triggering_challenges,
+            "accepted_risks": after.accepted_risks,
+        }
+    return commitment
+
+
+def resolve_challenge(ledger: dict[str, Any], *, challenge_id: str, evidence: str) -> dict[str, Any]:
+    """A human closes a challenge with evidence and the gate runs again.
+
+    The evidence is appended to the ledger's evidence list, the challenge is
+    marked RESOLVED by HUMAN, the previous commitment moves to
+    commitment_history, and a fresh commitment is computed. Only a closed
+    review with an unresolved target accepts this; check_reopen decides.
+    """
+    evidence = str(evidence or "").strip()
+    if not evidence:
+        raise ValueError("evidence is required to resolve a challenge")
+    ok, reason = check_reopen(ledger, trigger="NEW_EVIDENCE", challenge_id=challenge_id)
+    if not ok:
+        raise ValueError(reason)
+    challenge = next(c for c in ledger["challenges"] if c.get("id") == challenge_id)
+
+    record = ledger.setdefault("evidence", [])
+    entry = {
+        "id": f"EV-{len(record) + 1:03d}",
+        "challenge": challenge_id,
+        "text": evidence,
+        "submitted_by": "HUMAN",
+        "submitted_at": _now(),
+    }
+    record.append(entry)
+    challenge["status"] = "RESOLVED"
+    challenge["resolution"] = {"by": "HUMAN", "evidence_id": entry["id"], "evidence": evidence, "at": entry["submitted_at"]}
+
+    if "commitment" in ledger:
+        ledger.setdefault("commitment_history", []).append(ledger["commitment"])
+    ledger["commitment"] = build_commitment(ledger)
+    return ledger
 
 
 def check_reopen(
@@ -48,11 +112,19 @@ def score_outcomes(ledger: dict[str, Any], outcomes: dict[str, Any]) -> dict[str
     failed = sum(v == "FAILED" for v in claim_results.values())
     unknown = sum(v == "UNKNOWN" for v in claim_results.values())
     realized = sum(v == "REALIZED" for v in risk_results.values())
+    not_realized = sum(v == "NOT_REALIZED" for v in risk_results.values())
 
+    # Scored in both directions: an Adversary can be too lenient (a risk it
+    # waved through came true) or too harsh (a challenge it used to block or
+    # kill the decision never materialised). Only the first was counted before.
     underestimated = []
+    overestimated = []
     for challenge in ledger.get("challenges", []):
-        if risk_results.get(challenge.get("id")) == "REALIZED" and challenge.get("materiality") in {"MATERIAL", "NON_BLOCKING"}:
+        outcome = risk_results.get(challenge.get("id"))
+        if outcome == "REALIZED" and challenge.get("materiality") in {"MATERIAL", "NON_BLOCKING"}:
             underestimated.append(challenge.get("id"))
+        if outcome == "NOT_REALIZED" and challenge.get("materiality") in {"BLOCKING", "FATAL"}:
+            overestimated.append(challenge.get("id"))
 
     return {
         "decision": ledger.get("decision"),
@@ -62,5 +134,7 @@ def score_outcomes(ledger: dict[str, Any], outcomes: dict[str, Any]) -> dict[str
         "claims_failed": failed,
         "claims_unknown": unknown,
         "risks_realized": realized,
+        "risks_not_realized": not_realized,
         "possibly_underestimated_challenges": underestimated,
+        "possibly_overestimated_challenges": overestimated,
     }

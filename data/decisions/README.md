@@ -122,6 +122,12 @@ becomes the size of the loss, not the size of the buffer.
 These are observations, not conclusions. Four runs with one model in both
 roles is a demonstration, not a sample.
 
+They were also run before the burden-of-proof rules existed (the
+materiality rule, the Builder rebuttal turn, and the Adversary seeing the
+context). Their challenges carry no `basis` field and none was ever
+answered. The numbers below are the reason those rules were added, and the
+files are kept unedited as that evidence.
+
 **The stop rule never fired.** All four reviews ran to `max_rounds=3` and
 terminated on the round limit. Every round produced at least five
 consequential challenges; the smallest final round was five, the largest
@@ -168,14 +174,53 @@ computed, not narrated.
 The runs were produced on the author's machine with the author's API key.
 To make your own:
 
-```bash
-decision-gate review "Your decision as a yes/no question" \
-  --context "Anything specific the models should know" \
-  --builder-model anthropic/claude-opus-5 \
-  --adversary-model anthropic/claude-opus-5 \
-  --out data/decisions/007-your-decision.json
+```text
+decision-gate review "Your decision as a yes/no question" --context-file record.txt --builder-model anthropic/claude-opus-5 --adversary-model anthropic/claude-opus-5 --out data/decisions/007-your-decision.json
 ```
+
+One line, double quotes, so it pastes into PowerShell or bash. Put the record in `record.txt`, or pass a short one inline with `--context "..."`.
 
 Progress prints to stderr while the run is in flight. Wall time for these
 four was four to five minutes each. Nothing in this repository calls a model
 on anyone's behalf but the person running the command.
+
+## Re-running under the burden-of-proof rules
+
+The four runs above were made before the materiality rule and the Builder's
+rebuttal turn. The next experiment is to re-run each decision twice and
+compare the pair, because the question is not "does it say ACT now" but
+"does the answer depend on the evidence supplied". A version that says ACT
+without a record is as broken as one that never does.
+
+First write `runs/004-context.txt` as the record a real team would have:
+measured bytes read per night, the UDF inventory, the instance SKU and its
+NVMe throughput, whatever is actually known. The Builder can only resolve a
+challenge by quoting that file verbatim, so specifics matter and vague
+reassurance does nothing. Then, on any shell (each line is one command):
+
+```text
+decision-gate review "Should a data team migrate its nightly Spark batch jobs (2 TB/day) to DuckDB on a single large machine?" --builder-model anthropic/claude-opus-5 --adversary-model anthropic/claude-opus-5 --out runs/004-no-context.json
+
+decision-gate review "Should a data team migrate its nightly Spark batch jobs (2 TB/day) to DuckDB on a single large machine?" --context-file runs/004-context.txt --builder-model anthropic/claude-opus-5 --adversary-model anthropic/claude-opus-5 --out runs/004-with-context.json
+
+decision-gate compare data/decisions/004-spark-to-duckdb.json runs/004-no-context.json runs/004-with-context.json
+```
+
+The first run is the same decision with no record, so only the cap is at
+work. The second supplies the record. The third prints one row each: what
+was asked, what stood, what the gate said. Each review now makes seven model
+calls rather than four, because of the Builder's turns.
+
+What to look for in the compare table:
+
+- **No-context run.** `capped` should be well above zero and `open` BLOCKING
+  well below `asked` BLOCKING, since most old blockers only said a claim was
+  unmeasured. The gate should still be WAIT if any DEPENDENCY claim is
+  unevidenced. If it is ACT with no record at all, the cap is too generous.
+- **With-context run.** `resolved` should be non-zero and the gate should
+  move, to ACT or to WAIT on fewer, better-grounded blockers. Open each
+  resolution in the UI and check the quoted evidence really answers the
+  challenge; the runner verifies the quote is in the record, not that it is
+  relevant.
+- **Both.** `contrary_evidence` challenges are the ones that earned their
+  rating. Read them; they are the review.

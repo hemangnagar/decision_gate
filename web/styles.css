@@ -16,3 +16,22 @@ textarea[readonly]{background:#fbfbfc;color:#374151}
 .rule-table tr.matched td:last-child{border-radius:0 8px 8px 0}
 .next-action .then{margin-top:12px;padding-top:12px;border-top:1px solid #e5e7eb}
 .controls.demo{grid-template-columns:1fr auto}
+.status{display:inline-block;margin:0 7px 0 0;padding:4px 7px;border-radius:10px;font-weight:750;font-size:12px;letter-spacing:.04em}
+.status.resolved{background:#dcfce7;color:#166534}
+.status.withdrawn{background:#e5e7eb;color:#374151}
+.challenge-list details.closed summary{color:#6b7280}
+.challenge-list details.closed summary b{color:#6b7280}
+.rule-note{color:#9a3412}
+.answer{padding:8px 12px;border-left:3px solid #e5e7eb;margin:8px 0}
+.answer.resolved{border-left-color:#16a34a}
+.resolve{margin-top:10px;display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start}
+.resolve textarea{min-height:52px;border:1px solid #e5e7eb;border-radius:10px;font-size:14px;padding:10px}
+button.small{min-height:40px;padding:0 14px;font-size:13px}
+.history{margin:0 auto 10px;max-width:650px;color:#6b7280;font-size:13px}
+@media(max-width:760px){.resolve{grid-template-columns:1fr}}
+.open{display:block;margin-top:8px}
+.open input{font:inherit;font-size:13px;margin-left:6px}
+.file-banner{margin-bottom:18px;padding:10px 14px;border-radius:10px;background:#e0f2fe;color:#075985;font-weight:650;font-size:13px;letter-spacing:.02em}
+.tally{margin-top:14px;padding:12px 14px;background:#f9fafb;border-radius:12px;line-height:1.7;color:#374151}
+.tally .k{color:#6b7280;font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;margin-right:6px}
+.tally .moves{color:#166534}
