@@ -211,13 +211,11 @@ pip install -e '.[llm]'
 
 Set the provider API keys required by the two model strings you choose, then select **Live models via LiteLLM** in the UI or run:
 
-```bash
-decision-gate review \
-  "Should we build this product?" \
-  --builder-model 'openai/<model>' \
-  --adversary-model 'anthropic/<model>' \
-  --out decision.json
+```text
+decision-gate review "Should we build this product?" --builder-model openai/<model> --adversary-model anthropic/<model> --out decision.json
 ```
+
+Commands in this README are single lines with double quotes, so they paste into PowerShell and bash alike.
 
 Model names are intentionally user-supplied rather than pinned in the project. Pass the record with `--context "..."` or, for anything longer than a sentence, `--context-file record.txt`; the file form works the same on every shell.
 
@@ -322,9 +320,8 @@ supplied is the next experiment.
 
 Close a challenge with evidence and re-run the gate:
 
-```bash
-decision-gate resolve decision.json --challenge CH-001 \
-  --evidence "Replayed the five heaviest jobs at nightly concurrency on 6 Sept: no OOM, 1.4x slowdown from spill."
+```text
+decision-gate resolve decision.json --challenge CH-001 --evidence "Replayed the five heaviest jobs at nightly concurrency on 6 Sept: no OOM, 1.4x slowdown from spill."
 ```
 
 ```text

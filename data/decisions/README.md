@@ -174,13 +174,11 @@ computed, not narrated.
 The runs were produced on the author's machine with the author's API key.
 To make your own:
 
-```bash
-decision-gate review "Your decision as a yes/no question" \
-  --context "Anything specific the models should know" \
-  --builder-model anthropic/claude-opus-5 \
-  --adversary-model anthropic/claude-opus-5 \
-  --out data/decisions/007-your-decision.json
+```text
+decision-gate review "Your decision as a yes/no question" --context-file record.txt --builder-model anthropic/claude-opus-5 --adversary-model anthropic/claude-opus-5 --out data/decisions/007-your-decision.json
 ```
+
+One line, double quotes, so it pastes into PowerShell or bash. Put the record in `record.txt`, or pass a short one inline with `--context "..."`.
 
 Progress prints to stderr while the run is in flight. Wall time for these
 four was four to five minutes each. Nothing in this repository calls a model
