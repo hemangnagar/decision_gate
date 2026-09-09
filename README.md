@@ -219,7 +219,7 @@ decision-gate review \
   --out decision.json
 ```
 
-Model names are intentionally user-supplied rather than pinned in the project.
+Model names are intentionally user-supplied rather than pinned in the project. Pass the record with `--context "..."` or, for anything longer than a sentence, `--context-file record.txt`; the file form works the same on every shell.
 
 Live mode calls the providers with the API keys present on the machine running it. Nothing in this repository, and nothing in Demo mode, uses anyone else's account. If you host the UI for other people, host Demo mode only — Live mode on a public host means visitors spend your credits.
 

@@ -194,28 +194,24 @@ compare the pair, because the question is not "does it say ACT now" but
 "does the answer depend on the evidence supplied". A version that says ACT
 without a record is as broken as one that never does.
 
-```bash
-mkdir -p runs
-# 1. Same decision, no record: the cap alone is at work.
-decision-gate review "Should a data team migrate its nightly Spark batch jobs (2 TB/day) to DuckDB on a single large machine?" \
-  --builder-model anthropic/claude-opus-5 --adversary-model anthropic/claude-opus-5 \
-  --out runs/004-no-context.json
+First write `runs/004-context.txt` as the record a real team would have:
+measured bytes read per night, the UDF inventory, the instance SKU and its
+NVMe throughput, whatever is actually known. The Builder can only resolve a
+challenge by quoting that file verbatim, so specifics matter and vague
+reassurance does nothing. Then, on any shell (each line is one command):
 
-# 2. Same decision, with a record that answers some of the old blockers.
-decision-gate review "Should a data team migrate its nightly Spark batch jobs (2 TB/day) to DuckDB on a single large machine?" \
-  --context "$(cat runs/004-context.txt)" \
-  --builder-model anthropic/claude-opus-5 --adversary-model anthropic/claude-opus-5 \
-  --out runs/004-with-context.json
+```text
+decision-gate review "Should a data team migrate its nightly Spark batch jobs (2 TB/day) to DuckDB on a single large machine?" --builder-model anthropic/claude-opus-5 --adversary-model anthropic/claude-opus-5 --out runs/004-no-context.json
 
-# 3. One row each: what was asked, what stood, what the gate said.
+decision-gate review "Should a data team migrate its nightly Spark batch jobs (2 TB/day) to DuckDB on a single large machine?" --context-file runs/004-context.txt --builder-model anthropic/claude-opus-5 --adversary-model anthropic/claude-opus-5 --out runs/004-with-context.json
+
 decision-gate compare data/decisions/004-spark-to-duckdb.json runs/004-no-context.json runs/004-with-context.json
 ```
 
-Write `runs/004-context.txt` as the record a real team would have: measured
-bytes read per night, the UDF inventory, the instance SKU and its NVMe
-throughput, whatever is actually known. The Builder can only resolve a
-challenge by quoting that file verbatim, so specifics matter and vague
-reassurance does nothing.
+The first run is the same decision with no record, so only the cap is at
+work. The second supplies the record. The third prints one row each: what
+was asked, what stood, what the gate said. Each review now makes seven model
+calls rather than four, because of the Builder's turns.
 
 What to look for in the compare table:
 

@@ -26,7 +26,8 @@ def main() -> None:
 
     r = s.add_parser("review")
     r.add_argument("decision")
-    r.add_argument("--context", default="")
+    r.add_argument("--context", default="", help="the record: constraints and evidence the Builder may quote")
+    r.add_argument("--context-file", help="read the record from a UTF-8 text file instead (works on any shell)")
     r.add_argument("--builder-model", required=True)
     r.add_argument("--adversary-model", required=True)
     r.add_argument("--max-rounds", type=int, default=3)
@@ -54,9 +55,12 @@ def main() -> None:
     args = p.parse_args()
 
     if args.cmd == "review":
+        context = args.context
+        if args.context_file:
+            context = Path(args.context_file).read_text(encoding="utf-8")
         ledger = run_review(
             decision=args.decision,
-            context=args.context,
+            context=context,
             builder=LiteLLMProvider(args.builder_model),
             adversary=LiteLLMProvider(args.adversary_model),
             max_rounds=args.max_rounds,
