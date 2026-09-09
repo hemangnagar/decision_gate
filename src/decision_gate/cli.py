@@ -5,6 +5,7 @@ import json
 import sys
 from pathlib import Path
 
+from .env import load_dotenv
 from .gate import evaluate_gate, evaluate_if_resolved, should_stop
 from .lifecycle import check_reopen, resolve_challenge, score_outcomes
 from .providers import LiteLLMProvider
@@ -18,6 +19,7 @@ def load(path: str):
 
 
 def main() -> None:
+    load_dotenv()
     p = argparse.ArgumentParser(prog="decision-gate")
     s = p.add_subparsers(dest="cmd", required=True)
     v = s.add_parser("validate"); v.add_argument("ledger")

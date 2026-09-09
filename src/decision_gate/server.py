@@ -7,6 +7,7 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
+from .env import load_dotenv
 from .demo import DEMO_CONTEXT, DEMO_DECISION, DemoAdversary, DemoBuilder
 from .lifecycle import resolve_challenge
 from .providers import LiteLLMProvider
@@ -87,6 +88,7 @@ class DecisionGateHandler(SimpleHTTPRequestHandler):
 
 
 def main() -> None:
+    load_dotenv()
     parser = argparse.ArgumentParser(prog="decision-gate-web")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8000)

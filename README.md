@@ -209,7 +209,7 @@ Decision Gate uses [LiteLLM](https://docs.litellm.ai/) as a provider-neutral ada
 pip install -e '.[llm]'
 ```
 
-Set the provider API keys required by the two model strings you choose, then select **Live models via LiteLLM** in the UI or run:
+Set the provider API keys required by the two model strings you choose, either in your shell or in a `.env` file in the project folder (one `KEY=value` per line; the file is git-ignored). Then select **Live** in the UI or run:
 
 ```text
 decision-gate review "Should we build this product?" --builder-model openai/<model> --adversary-model anthropic/<model> --out decision.json
