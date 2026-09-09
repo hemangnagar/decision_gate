@@ -1,0 +1,13 @@
+Record for the Spark-to-DuckDB decision. Hypothetical but specific, written to answer some of the blocking challenges in ledger 004 and leave others open, so the re-run shows whether the gate reacts to evidence.
+
+Volume and I/O. Logical volume is 2.1 TB/day. Measured from S3 request metrics over the nights of 1-3 September, the nightly run reads 3.4 TB and writes 0.9 TB. Cold-cache sustained read throughput on the candidate instance was 2.1 GB/s. End-to-end wall clock on a full replay was 4 h 10 min against a 6 h SLA, including one deliberately induced retry of the largest job.
+
+Instance. The candidate SKU is r7i.metal-48xl in us-east-1, quota approved for two instances: 1.5 TB RAM, 96 cores, 4 x 1.9 TB local NVMe striped, measured sequential write 5.2 GB/s and random write 1.1 GB/s. The temp directory is recreated on stop/start; nothing persists there.
+
+Concurrency and spill. The five heaviest jobs by shuffle write were replayed at nightly concurrency of 12 with memory_limit set to 1.2 TB. Peak RSS was 1.05 TB, total spill 380 GB, and the worst job ran 1.6x slower than its in-memory run. No OOM.
+
+Non-SQL constructs. The inventory found 14 Python UDFs (processing 11% of rows), one MLlib job (nightly propensity scoring on 40 M rows), and three stateful incremental jobs. Nine UDFs are translatable to SQL, four need a DuckDB extension, and the MLlib job has no DuckDB equivalent and would need a separate component. That job has not been prototyped.
+
+Cost attribution. Current Spark platform spend is $41k/month. Nightly batch compute that would disappear is $23k. Other tenants (ad hoc analytics, two streaming jobs) account for $12k and must be re-homed or retained. Control plane, catalog, and support contracts are $6k and persist. The Spark platform would be kept for the other tenants.
+
+Not yet done. No three-year cost comparison against a tuned Spark baseline. No measurement of pipeline change velocity, and no change freeze agreed. No thread-scaling benchmark on the candidate instance. No map of concurrent writers in the DAG.
